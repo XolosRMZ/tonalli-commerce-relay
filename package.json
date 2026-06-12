@@ -1,0 +1,16 @@
+{
+  "name": "@xolosarmy/tonalli-commerce-relay",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "pnpm@10.17.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "echo \"No dev server configured yet\"",
+    "lint": "echo \"No lint configured yet\"",
+    "test": "echo \"No tests configured yet\""
+  }
+}
