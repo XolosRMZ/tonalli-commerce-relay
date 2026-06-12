@@ -24,6 +24,16 @@ importers:
         specifier: ^5.0.0
         version: 5.9.3
 
+  packages/reputation:
+    dependencies:
+      '@xolosarmy/models':
+        specifier: workspace:*
+        version: link:../models
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+
   packages/tonalli-auth:
     devDependencies:
       typescript:
