@@ -8,6 +8,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@xolosarmy/escrow-core": "workspace:*",
     "@xolosarmy/models": "workspace:*",
     "@xolosarmy/pricing": "workspace:*",
     "@xolosarmy/tonalli-auth": "workspace:*",

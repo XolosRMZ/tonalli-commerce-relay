@@ -58,3 +58,12 @@ GET `/api/orders/:id`
 curl http://localhost:3000/api/orders/order-id
 ```
 
+### Simulate order funding
+
+POST `/api/orders/:id/fund`
+
+```sh
+curl -X POST http://localhost:3000/api/orders/order-id/fund \
+  -H "Content-Type: application/json" \
+  -d '{"buyer":{"userId":"user_123","address":"ecash:q...","publicKey":"..."},"simulatedDepositTxid":"dev-txid-123"}'
+```
