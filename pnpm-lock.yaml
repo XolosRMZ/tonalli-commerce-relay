@@ -8,6 +8,16 @@ importers:
 
   .: {}
 
+  packages/escrow-core:
+    dependencies:
+      '@xolosarmy/models':
+        specifier: workspace:*
+        version: link:../models
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+
   packages/models:
     devDependencies:
       typescript:
