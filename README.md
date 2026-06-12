@@ -107,3 +107,13 @@ curl -X POST http://localhost:3000/api/orders/order-id/release-request \
   -H "Content-Type: application/json" \
   -d '{"intermediaryUserId":"merchant_123","message":"Product shipped and evidence submitted. Requesting escrow release.","requestedAt":"2026-06-12T20:00:00.000Z"}'
 ```
+
+### Simulate escrow release
+
+POST `/api/orders/:id/release`
+
+```sh
+curl -X POST http://localhost:3000/api/orders/order-id/release \
+  -H "Content-Type: application/json" \
+  -d '{"buyerUserId":"user_123","buyer":{"userId":"user_123","address":"ecash:q...","publicKey":"..."},"intermediary":{"userId":"merchant_123","address":"ecash:q...","publicKey":"..."},"simulatedReleaseTxid":"dev-release-txid-123","networkFeeXec":10}'
+```
