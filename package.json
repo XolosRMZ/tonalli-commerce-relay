@@ -11,6 +11,9 @@
     "build": "pnpm -r build",
     "dev": "echo \"No dev server configured yet\"",
     "lint": "echo \"No lint configured yet\"",
-    "test": "echo \"No tests configured yet\""
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0"
   }
 }
