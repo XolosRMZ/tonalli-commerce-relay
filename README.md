@@ -77,3 +77,13 @@ curl -X POST http://localhost:3000/api/orders/order-id/accept \
   -H "Content-Type: application/json" \
   -d '{"intermediary":{"userId":"merchant_123","address":"ecash:q...","alias":"merchant.xec"},"reputationProfile":{"userId":"merchant_123","alias":"merchant.xec","address":"ecash:q...","level":"alias_verified","score":25,"completedOrders":3,"completedEligibleOrders":2,"totalVolumeXec":500000,"totalVolumeFiatMxn":1200,"openDisputes":0,"wonDisputes":0,"lostDisputes":0,"limits":{"maxOrderFiatMxn":1000,"maxDailyFiatMxn":2000},"isFrozen":false,"updatedAt":"2026-06-12T00:00:00.000Z"},"currentDailyVolumeFiatMxn":0}'
 ```
+
+### Mark order as purchased
+
+POST `/api/orders/:id/purchase`
+
+```sh
+curl -X POST http://localhost:3000/api/orders/order-id/purchase \
+  -H "Content-Type: application/json" \
+  -d '{"intermediaryUserId":"merchant_123","evidence":{"type":"receipt","uri":"https://example.com/receipt.png","hash":"sha256-placeholder","notes":"Order placed successfully"},"externalOrderId":"AMZ-123456","purchasedAt":"2026-06-12T20:00:00.000Z"}'
+```
