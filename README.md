@@ -124,3 +124,23 @@ curl -X POST http://localhost:3000/api/orders/order-id/release \
   -H "Content-Type: application/json" \
   -d '{"buyerUserId":"user_123","buyer":{"userId":"user_123","address":"ecash:q...","publicKey":"..."},"intermediary":{"userId":"merchant_123","address":"ecash:q...","publicKey":"..."},"simulatedReleaseTxid":"dev-release-txid-123","networkFeeXec":10}'
 ```
+
+### Request refund
+
+POST `/api/orders/:id/refund-request`
+
+```sh
+curl -X POST http://localhost:3000/api/orders/order-id/refund-request \
+  -H "Content-Type: application/json" \
+  -d '{"requestedByUserId":"merchant_123","reason":"Product out of stock","requestedAt":"2026-06-12T20:00:00.000Z"}'
+```
+
+### Simulate refund
+
+POST `/api/orders/:id/refund`
+
+```sh
+curl -X POST http://localhost:3000/api/orders/order-id/refund \
+  -H "Content-Type: application/json" \
+  -d '{"buyerUserId":"user_123","buyer":{"userId":"user_123","address":"ecash:q...","publicKey":"..."},"intermediary":{"userId":"merchant_123","address":"ecash:q...","publicKey":"..."},"simulatedRefundTxid":"dev-refund-txid-123","networkFeeXec":10}'
+```
