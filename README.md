@@ -97,3 +97,13 @@ curl -X POST http://localhost:3000/api/orders/order-id/ship \
   -H "Content-Type: application/json" \
   -d '{"intermediaryUserId":"merchant_123","tracking":{"carrier":"DHL","trackingNumber":"123456789","trackingUrl":"https://example.com/tracking/123456789","notes":"Package shipped"},"shippedAt":"2026-06-12T20:00:00.000Z"}'
 ```
+
+### Request escrow release
+
+POST `/api/orders/:id/release-request`
+
+```sh
+curl -X POST http://localhost:3000/api/orders/order-id/release-request \
+  -H "Content-Type: application/json" \
+  -d '{"intermediaryUserId":"merchant_123","message":"Product shipped and evidence submitted. Requesting escrow release.","requestedAt":"2026-06-12T20:00:00.000Z"}'
+```
