@@ -41,4 +41,9 @@ export class InMemoryOrderStore {
   }
 }
 
-export const orderStore = new InMemoryOrderStore();
+const globalForOrderStore = globalThis as typeof globalThis & {
+  __tonalliOrderStore?: InMemoryOrderStore;
+};
+
+export const orderStore =
+  globalForOrderStore.__tonalliOrderStore ??= new InMemoryOrderStore();
