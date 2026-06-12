@@ -10,8 +10,10 @@
   "scripts": {
     "build": "pnpm -r build",
     "dev": "echo \"No dev server configured yet\"",
+    "dev:web": "pnpm --filter @xolosarmy/web dev",
     "lint": "echo \"No lint configured yet\"",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {
     "vitest": "^3.0.0"
