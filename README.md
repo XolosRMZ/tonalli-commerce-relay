@@ -164,3 +164,6 @@ curl -X POST http://localhost:3000/api/orders/order-id/resolve-dispute \
   -H "Content-Type: application/json" \
   -d '{"resolvedByUserId":"arb_dev","resolution":"refund_to_buyer","authority":"arbitrator","buyer":{"userId":"user_123","address":"ecash:q...","publicKey":"..."},"arbitrator":{"userId":"arb_dev","address":"ecash:q...","publicKey":"..."},"networkFeeXec":10,"simulatedTxid":"dev-dispute-resolution-txid","resolvedAt":"2026-06-12T20:00:00.000Z"}'
 ```
+
+## Documentation
+* [Database Schema Design](docs/DATABASE_SCHEMA.md)
