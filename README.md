@@ -31,3 +31,30 @@ curl -X POST http://localhost:3000/api/quote \
   -H "Content-Type: application/json" \
   -d '{"amount":100,"currency":"MXN","intermediaryFeePercent":5,"platformFeePercent":1,"networkFeeReserveXec":100}'
 ```
+
+### Create draft order
+
+POST `/api/orders`
+
+```sh
+curl -X POST http://localhost:3000/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"buyerUserId":"user_123","buyerAddress":"ecash:q...","buyerAlias":"xolosarmy.xec","product":{"provider":"amazon_mx","productUrl":"https://amazon.com.mx/example","title":"Example product","quantity":1,"notes":"Color negro"},"quote":{"totalFiat":{"amount":106,"currency":"MXN"},"totalXec":{"amount":318100,"currency":"XEC"}}}'
+```
+
+### List orders
+
+GET `/api/orders`
+
+```sh
+curl http://localhost:3000/api/orders
+```
+
+### Get order
+
+GET `/api/orders/:id`
+
+```sh
+curl http://localhost:3000/api/orders/order-id
+```
+
