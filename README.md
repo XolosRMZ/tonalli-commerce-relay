@@ -144,3 +144,23 @@ curl -X POST http://localhost:3000/api/orders/order-id/refund \
   -H "Content-Type: application/json" \
   -d '{"buyerUserId":"user_123","buyer":{"userId":"user_123","address":"ecash:q...","publicKey":"..."},"intermediary":{"userId":"merchant_123","address":"ecash:q...","publicKey":"..."},"simulatedRefundTxid":"dev-refund-txid-123","networkFeeXec":10}'
 ```
+
+### Open dispute
+
+POST `/api/orders/:id/dispute`
+
+```sh
+curl -X POST http://localhost:3000/api/orders/order-id/dispute \
+  -H "Content-Type: application/json" \
+  -d '{"openedByUserId":"user_123","reason":"Product not received","evidence":[{"type":"conversation","uri":"https://example.com/evidence","hash":"sha256-placeholder"}],"openedAt":"2026-06-12T20:00:00.000Z"}'
+```
+
+### Resolve dispute
+
+POST `/api/orders/:id/resolve-dispute`
+
+```sh
+curl -X POST http://localhost:3000/api/orders/order-id/resolve-dispute \
+  -H "Content-Type: application/json" \
+  -d '{"resolvedByUserId":"arb_dev","resolution":"refund_to_buyer","authority":"arbitrator","buyer":{"userId":"user_123","address":"ecash:q...","publicKey":"..."},"arbitrator":{"userId":"arb_dev","address":"ecash:q...","publicKey":"..."},"networkFeeXec":10,"simulatedTxid":"dev-dispute-resolution-txid","resolvedAt":"2026-06-12T20:00:00.000Z"}'
+```
