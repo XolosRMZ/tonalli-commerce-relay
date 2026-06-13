@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import type { EvidenceRecord } from "@/server/evidence/evidence-store";
+import { getEvidenceStore } from "@/server/evidence/get-evidence-store";
 import { getOrderStore } from "@/server/orders/get-order-store";
 
 interface OrderShipRouteContext {
@@ -104,15 +106,6 @@ export async function POST(request: Request, context: OrderShipRouteContext) {
     );
   }
 
-  const updatedOrder = await orderStore.update(order.id, {
-    status: "SHIPPED",
-    updatedAt: new Date().toISOString(),
-  });
-
-  if (updatedOrder === null) {
-    return NextResponse.json({ error: "Order not found" }, { status: 404 });
-  }
-
   const shippingEvidence: SimulatedShippingEvidence = {
     carrier: shipRequest.tracking.carrier,
     trackingNumber: shipRequest.tracking.trackingNumber,
@@ -122,14 +115,42 @@ export async function POST(request: Request, context: OrderShipRouteContext) {
     submittedAt: shipRequest.shippedAt,
   };
 
-  // TODO: Persist tracking in PostgreSQL.
+  let evidenceRecord: EvidenceRecord;
+
+  try {
+    const evidenceStore = await getEvidenceStore();
+    evidenceRecord = await evidenceStore.create({
+      orderId: order.id,
+      type: "tracking",
+      uri: shipRequest.tracking.trackingUrl,
+      hash: undefined,
+      notes: shipRequest.tracking.notes,
+      externalReference: `${shipRequest.tracking.carrier}:${shipRequest.tracking.trackingNumber}`,
+      submittedByUserId: shipRequest.intermediaryUserId,
+      submittedAt: shipRequest.shippedAt,
+    });
+  } catch (error) {
+    return failedEvidencePersistenceResponse(error);
+  }
+
+  // TODO: Wrap evidence + order update in a DB transaction when using Prisma.
+  const updatedOrder = await orderStore.update(order.id, {
+    status: "SHIPPED",
+    updatedAt: new Date().toISOString(),
+  });
+
+  if (updatedOrder === null) {
+    return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  }
+
   // TODO: Attach tracking to order history.
   // TODO: Hash sensitive shipping evidence before any on-chain anchoring.
   return NextResponse.json({
     order: updatedOrder,
     shippingEvidence,
+    evidenceRecord,
     warning:
-      "Shipping evidence is returned in response only. Persistent tracking storage will be added later.",
+      "Shipping evidence is persisted separately from the order update. Transaction support will be added later.",
   });
 }
 
@@ -277,6 +298,16 @@ function invalidShipOrderRequestResponse(reason: string) {
       reason,
     },
     { status: 400 },
+  );
+}
+
+function failedEvidencePersistenceResponse(error: unknown) {
+  return NextResponse.json(
+    {
+      error: "Failed to persist evidence",
+      reason: errorReason(error, "Unknown evidence persistence failure"),
+    },
+    { status: 500 },
   );
 }
 

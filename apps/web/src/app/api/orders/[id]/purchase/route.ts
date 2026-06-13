@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import type { EvidenceRecord } from "@/server/evidence/evidence-store";
+import { getEvidenceStore } from "@/server/evidence/get-evidence-store";
 import { getOrderStore } from "@/server/orders/get-order-store";
 
 interface OrderPurchaseRouteContext {
@@ -115,15 +117,6 @@ export async function POST(request: Request, context: OrderPurchaseRouteContext)
     );
   }
 
-  const updatedOrder = await orderStore.update(order.id, {
-    status: "PURCHASED",
-    updatedAt: new Date().toISOString(),
-  });
-
-  if (updatedOrder === null) {
-    return NextResponse.json({ error: "Order not found" }, { status: 404 });
-  }
-
   const purchaseEvidence: SimulatedPurchaseEvidence = {
     type: purchaseRequest.evidence.type,
     uri: purchaseRequest.evidence.uri,
@@ -134,14 +127,42 @@ export async function POST(request: Request, context: OrderPurchaseRouteContext)
     submittedAt: purchaseRequest.purchasedAt,
   };
 
-  // TODO: Persist evidence in PostgreSQL.
+  let evidenceRecord: EvidenceRecord;
+
+  try {
+    const evidenceStore = await getEvidenceStore();
+    evidenceRecord = await evidenceStore.create({
+      orderId: order.id,
+      type: purchaseRequest.evidence.type,
+      uri: purchaseRequest.evidence.uri,
+      hash: purchaseRequest.evidence.hash,
+      notes: purchaseRequest.evidence.notes,
+      externalReference: purchaseRequest.externalOrderId,
+      submittedByUserId: purchaseRequest.intermediaryUserId,
+      submittedAt: purchaseRequest.purchasedAt,
+    });
+  } catch (error) {
+    return failedEvidencePersistenceResponse(error);
+  }
+
+  // TODO: Wrap evidence + order update in a DB transaction when using Prisma.
+  const updatedOrder = await orderStore.update(order.id, {
+    status: "PURCHASED",
+    updatedAt: new Date().toISOString(),
+  });
+
+  if (updatedOrder === null) {
+    return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  }
+
   // TODO: Store files/hashes securely.
   // TODO: Attach evidence to dispute/order history.
   return NextResponse.json({
     order: updatedOrder,
     purchaseEvidence,
+    evidenceRecord,
     warning:
-      "Evidence is returned in response only. Persistent evidence storage will be added later.",
+      "Evidence is persisted separately from the order update. Transaction support will be added later.",
   });
 }
 
@@ -314,6 +335,16 @@ function invalidPurchaseOrderRequestResponse(reason: string) {
       reason,
     },
     { status: 400 },
+  );
+}
+
+function failedEvidencePersistenceResponse(error: unknown) {
+  return NextResponse.json(
+    {
+      error: "Failed to persist evidence",
+      reason: errorReason(error, "Unknown evidence persistence failure"),
+    },
+    { status: 500 },
   );
 }
 

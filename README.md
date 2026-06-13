@@ -71,7 +71,9 @@ TONALLI_EVIDENCE_STORE=prisma
 TONALLI_DISPUTE_STORE=prisma
 ```
 
-The Prisma evidence and dispute stores require `DATABASE_URL`, `docker compose`, and Prisma migrations. Endpoints will be wired in a later step.
+`POST /api/orders/[id]/purchase` and `POST /api/orders/[id]/ship` use `TONALLI_EVIDENCE_STORE` to persist submitted evidence. The default is `memory`, so local happy-path scripts and development flows do not require a database.
+
+The Prisma evidence and dispute stores require `DATABASE_URL`, `docker compose`, and Prisma migrations. Use `TONALLI_EVIDENCE_STORE=prisma` only after the database schema has been migrated.
 
 ## Auth development
 
