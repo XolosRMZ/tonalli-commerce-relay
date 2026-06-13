@@ -46,6 +46,30 @@ pnpm --filter @xolosarmy/db prisma studio
 - `DATABASE_URL` configured
 - `prisma migrate dev` executed
 
+### Prisma auth smoke test
+
+```bash
+docker compose up -d
+```
+
+```bash
+export DATABASE_URL="postgresql://tonalli:tonalli_dev_password@localhost:5432/tonalli_commerce_relay?schema=public"
+```
+
+```bash
+pnpm --filter @xolosarmy/db prisma migrate dev --name init_users_auth_challenges
+```
+
+```bash
+TONALLI_AUTH_STORE=prisma TONALLI_AUTH_DEV_BYPASS=true DATABASE_URL="$DATABASE_URL" pnpm dev:web
+```
+
+In another terminal:
+
+```bash
+BASE_URL=http://localhost:3000 DATABASE_URL="$DATABASE_URL" bash scripts/auth-prisma-smoke.sh
+```
+
 ## Happy path demo
 
 ```bash
