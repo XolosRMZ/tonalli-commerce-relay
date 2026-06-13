@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { orderStore } from "@/server/orders/order-store";
+import { getOrderStore } from "@/server/orders/get-order-store";
 
 interface OrderShipRouteContext {
   params: Promise<{
@@ -49,6 +49,7 @@ type ShipOrderRequestValidation =
 
 export async function POST(request: Request, context: OrderShipRouteContext) {
   const { id } = await context.params;
+  const orderStore = await getOrderStore();
   const order = await orderStore.findById(id);
 
   if (order === null) {

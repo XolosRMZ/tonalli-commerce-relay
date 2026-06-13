@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { orderStore } from "@/server/orders/order-store";
+import { getOrderStore } from "@/server/orders/get-order-store";
 
 interface OrderPurchaseRouteContext {
   params: Promise<{
@@ -60,6 +60,7 @@ type PurchaseOrderRequestValidation =
 
 export async function POST(request: Request, context: OrderPurchaseRouteContext) {
   const { id } = await context.params;
+  const orderStore = await getOrderStore();
   const order = await orderStore.findById(id);
 
   if (order === null) {

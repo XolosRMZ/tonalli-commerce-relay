@@ -2,7 +2,7 @@ import type { ReputationLevel, ReputationProfile } from "@xolosarmy/models";
 import { canUserAcceptOrder } from "@xolosarmy/reputation";
 import { NextResponse } from "next/server";
 
-import { orderStore } from "@/server/orders/order-store";
+import { getOrderStore } from "@/server/orders/get-order-store";
 
 interface OrderAcceptRouteContext {
   params: Promise<{
@@ -40,6 +40,7 @@ type AcceptOrderRequestValidation =
 
 export async function POST(request: Request, context: OrderAcceptRouteContext) {
   const { id } = await context.params;
+  const orderStore = await getOrderStore();
   const order = await orderStore.findById(id);
 
   if (order === null) {

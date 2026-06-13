@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { orderStore } from "@/server/orders/order-store";
+import { getOrderStore } from "@/server/orders/get-order-store";
 
 interface OrderReleaseRequestRouteContext {
   params: Promise<{
@@ -35,6 +35,7 @@ export async function POST(
   context: OrderReleaseRequestRouteContext,
 ) {
   const { id } = await context.params;
+  const orderStore = await getOrderStore();
   const order = await orderStore.findById(id);
 
   if (order === null) {

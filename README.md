@@ -39,7 +39,21 @@ pnpm --filter @xolosarmy/db prisma studio
 
 ## Order persistence
 
-The Prisma schema includes `Order`, `EscrowRecord`, and `OrderEvent` for upcoming order persistence. Endpoints still use the in-memory order store unless persistence is enabled in a later change.
+### Order store
+
+Default:
+
+```bash
+TONALLI_ORDER_STORE=memory
+```
+
+PostgreSQL:
+
+```bash
+TONALLI_ORDER_STORE=prisma
+```
+
+The Prisma order store requires `DATABASE_URL`, `docker compose`, and Prisma migrations.
 
 ## Auth development
 

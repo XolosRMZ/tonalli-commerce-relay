@@ -1,7 +1,7 @@
 import type { CommerceOrderStatus } from "@xolosarmy/models";
 import { NextResponse } from "next/server";
 
-import { orderStore } from "@/server/orders/order-store";
+import { getOrderStore } from "@/server/orders/get-order-store";
 
 interface OrderDisputeRouteContext {
   params: Promise<{
@@ -56,6 +56,7 @@ const DISPUTABLE_ORDER_STATUSES: CommerceOrderStatus[] = [
 
 export async function POST(request: Request, context: OrderDisputeRouteContext) {
   const { id } = await context.params;
+  const orderStore = await getOrderStore();
   const order = await orderStore.findById(id);
 
   if (order === null) {

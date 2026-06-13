@@ -1,7 +1,14 @@
 import type { CommerceOrder } from "@xolosarmy/models";
 
+export interface OrderStore {
+  create(order: CommerceOrder): Promise<CommerceOrder>;
+  findById(id: string): Promise<CommerceOrder | null>;
+  list(): Promise<CommerceOrder[]>;
+  update(id: string, patch: Partial<CommerceOrder>): Promise<CommerceOrder | null>;
+}
+
 // TODO: reemplazar por PostgreSQL.
-export class InMemoryOrderStore {
+export class InMemoryOrderStore implements OrderStore {
   private readonly orders = new Map<string, CommerceOrder>();
 
   async create(order: CommerceOrder): Promise<CommerceOrder> {

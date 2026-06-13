@@ -2,7 +2,7 @@ import { createEscrowScriptDraft } from "@xolosarmy/escrow-core";
 import type { EscrowParticipant, EscrowParticipants } from "@xolosarmy/escrow-core";
 import { NextResponse } from "next/server";
 
-import { orderStore } from "@/server/orders/order-store";
+import { getOrderStore } from "@/server/orders/get-order-store";
 
 interface OrderFundRouteContext {
   params: Promise<{
@@ -42,6 +42,7 @@ type FundOrderRequestValidation =
 
 export async function POST(request: Request, context: OrderFundRouteContext) {
   const { id } = await context.params;
+  const orderStore = await getOrderStore();
   const order = await orderStore.findById(id);
 
   if (order === null) {

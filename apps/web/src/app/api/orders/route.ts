@@ -6,7 +6,7 @@ import type {
 } from "@xolosarmy/models";
 import { NextResponse } from "next/server";
 
-import { orderStore } from "@/server/orders/order-store";
+import { getOrderStore } from "@/server/orders/get-order-store";
 
 interface OrderRequestBody {
   buyerUserId?: unknown;
@@ -37,6 +37,7 @@ type OrderRequestValidation =
   | { valid: false; reason: string };
 
 export async function GET() {
+  const orderStore = await getOrderStore();
   const orders = await orderStore.list();
 
   return NextResponse.json({ orders });
@@ -75,6 +76,7 @@ export async function POST(request: Request) {
     updatedAt: now,
   };
 
+  const orderStore = await getOrderStore();
   const createdOrder = await orderStore.create(order);
 
   return NextResponse.json({ order: createdOrder }, { status: 201 });
