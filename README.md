@@ -36,6 +36,11 @@ pnpm --filter @xolosarmy/db prisma migrate dev --name init_users_auth_challenges
 pnpm --filter @xolosarmy/db prisma studio
 ```
 
+
+## Order persistence
+
+The Prisma schema includes `Order`, `EscrowRecord`, and `OrderEvent` for upcoming order persistence. Endpoints still use the in-memory order store unless persistence is enabled in a later change.
+
 ## Auth development
 
 `TONALLI_AUTH_STORE=memory` is the default and uses the in-memory challenge store.

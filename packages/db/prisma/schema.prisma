@@ -37,3 +37,58 @@ model AuthChallenge {
   @@index([revokedAt])
   @@index([domain, address])
 }
+
+model Order {
+  id                 String         @id
+  buyerUserId        String
+  intermediaryUserId String?
+  arbitratorUserId   String?
+  moderatorUserId    String?
+  status             String
+  disputeStatus      String
+  product            Json
+  quote              Json
+  createdAt          DateTime
+  updatedAt          DateTime
+  escrowRecord       EscrowRecord?
+  events             OrderEvent[]
+
+  @@index([status])
+  @@index([buyerUserId])
+  @@index([intermediaryUserId])
+  @@index([createdAt])
+}
+
+model EscrowRecord {
+  id              String   @id @default(uuid())
+  orderId         String   @unique
+  escrowAddress   String?
+  escrowScriptHex String?
+  depositTxid     String?
+  releaseTxid     String?
+  refundTxid      String?
+  nonce           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([depositTxid])
+  @@index([releaseTxid])
+  @@index([refundTxid])
+}
+
+model OrderEvent {
+  id          String   @id @default(uuid())
+  orderId     String
+  type        String
+  actorUserId String?
+  payload     Json?
+  createdAt   DateTime @default(now())
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([orderId, createdAt])
+}
+

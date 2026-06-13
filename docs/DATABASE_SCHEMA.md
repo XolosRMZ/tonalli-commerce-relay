@@ -28,20 +28,23 @@ Este documento define la arquitectura de persistencia para Tonalli Commerce Rela
 * **Índices:** `nonce`, `address`.
 
 ### `orders`
-* **Propósito:** Registro central del flujo comercial.
-* **Columnas:** `id` (UUID, PK), `buyer_user_id` (UUID, FK), `intermediary_user_id` (UUID, FK, Nullable), `status` (String), `product_provider` (String), `product_url` (String), `total_fiat_amount` (Decimal), `total_fiat_currency` (String), `total_xec_amount` (Decimal), `created_at`, `updated_at`.
-* **Índices:** `buyer_user_id`, `intermediary_user_id`, `status`.
-* **Notas:** Los montos deben usar tipos numéricos exactos (Decimal/Numeric) para evitar errores de coma flotante.
+* **Propósito:** Registro central del flujo comercial. El schema Prisma ya existe, pero los endpoints del MVP siguen usando el store in-memory hasta que se habilite la persistencia.
+* **Columnas Prisma:** `id` (String, PK), `buyerUserId` (String), `intermediaryUserId` (String, Nullable), `arbitratorUserId` (String, Nullable), `moderatorUserId` (String, Nullable), `status` (String), `disputeStatus` (String), `product` (Json), `quote` (Json), `createdAt`, `updatedAt`.
+* **Índices:** `status`, `buyerUserId`, `intermediaryUserId`, `createdAt`.
+* **Relaciones:** One-to-one opcional con `EscrowRecord`; one-to-many con `OrderEvent`.
+* **Notas:** `product` y `quote` conservan la forma del MVP mientras se prepara el adapter de persistencia.
 
 ### `escrow_records`
 * **Propósito:** Vincular la orden comercial con los artefactos criptográficos y transacciones on-chain.
-* **Columnas:** `id` (UUID, PK), `order_id` (UUID, FK, Unique), `escrow_address` (String), `escrow_script_hex` (String), `nonce` (String), `deposit_txid` (String, Nullable), `release_txid` (String, Nullable), `refund_txid` (String, Nullable).
-* **Índices:** `order_id`, `escrow_address`.
+* **Columnas Prisma:** `id` (String, PK, `uuid()`), `orderId` (String, Unique), `escrowAddress` (String, Nullable), `escrowScriptHex` (String, Nullable), `depositTxid` (String, Nullable), `releaseTxid` (String, Nullable), `refundTxid` (String, Nullable), `nonce` (String, Nullable), `createdAt`, `updatedAt`.
+* **Índices:** `depositTxid`, `releaseTxid`, `refundTxid`.
+* **Relaciones:** One-to-one requerida con `Order` por `orderId`.
 
 ### `order_events`
 * **Propósito:** Event Sourcing. Historial inmutable de cada cambio de estado en una orden.
-* **Columnas:** `id` (UUID, PK), `order_id` (UUID, FK), `actor_user_id` (UUID, FK), `event_type` (String), `payload` (JSONB), `created_at`.
-* **Índices:** `order_id`, `created_at`.
+* **Columnas Prisma:** `id` (String, PK, `uuid()`), `orderId` (String), `type` (String), `actorUserId` (String, Nullable), `payload` (Json, Nullable), `createdAt`.
+* **Índices:** `orderId`, `type`, `createdAt`, compuesto `[orderId, createdAt]`.
+* **Relaciones:** Many-to-one con `Order`.
 
 ### `order_evidence`
 * **Propósito:** Registro de evidencias logísticas aportadas por el intermediario.
