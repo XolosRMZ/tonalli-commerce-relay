@@ -113,6 +113,30 @@ In another terminal:
 BASE_URL=http://localhost:3000 DATABASE_URL="$DATABASE_URL" bash scripts/orders-prisma-smoke.sh
 ```
 
+### Prisma commerce flows
+
+```bash
+docker compose up -d
+```
+
+```bash
+export DATABASE_URL="postgresql://tonalli:tonalli_dev_password@localhost:5432/tonalli_commerce_relay?schema=public"
+```
+
+```bash
+pnpm --filter @xolosarmy/db prisma migrate dev
+```
+
+```bash
+TONALLI_ORDER_STORE=prisma DATABASE_URL="$DATABASE_URL" pnpm dev:web
+```
+
+In another terminal:
+
+```bash
+BASE_URL=http://localhost:3000 DATABASE_URL="$DATABASE_URL" bash scripts/prisma-commerce-flows.sh
+```
+
 ## Happy path demo
 
 ```bash
