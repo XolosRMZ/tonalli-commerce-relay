@@ -9,6 +9,8 @@ import { NextResponse } from "next/server";
 import { getDisputeStore } from "@/server/disputes/get-dispute-store";
 import type { DisputeRecord, DisputeStore } from "@/server/disputes/dispute-store";
 import { getOrderStore } from "@/server/orders/get-order-store";
+import { getReputationStore } from "@/server/reputation/get-reputation-store";
+import { applyDisputeWon, applyDisputeLost } from "@xolosarmy/reputation";
 
 interface ResolveDisputeRouteContext {
   params: Promise<{
@@ -294,6 +296,27 @@ export async function POST(request: Request, context: ResolveDisputeRouteContext
   if (updatedOrder === null) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
+
+  // --- REPUTATION ENGINE INJECTION ---
+  if (updatedOrder.intermediaryUserId) {
+    try {
+      const repStore = await getReputationStore();
+      const profile = await repStore.getProfile(updatedOrder.intermediaryUserId);
+      if (profile) {
+        const isIntermediaryWinner = resolutionRequest.resolution === "release_to_intermediary";
+        const eventType = isIntermediaryWinner ? "dispute_won" : "dispute_lost";
+        const result = isIntermediaryWinner
+          ? applyDisputeWon(profile, { type: eventType, userId: profile.userId, orderId: updatedOrder.id, occurredAt: new Date().toISOString() })
+          : applyDisputeLost(profile, { type: eventType, userId: profile.userId, orderId: updatedOrder.id, occurredAt: new Date().toISOString() });
+
+        await repStore.saveProfile(result.profile);
+        await repStore.addEvent(result.event);
+      }
+    } catch (error) {
+      // Allow dispute resolution to succeed even if reputation update fails
+    }
+  }
+  // -----------------------------------
 
   return NextResponse.json({
     order: updatedOrder,

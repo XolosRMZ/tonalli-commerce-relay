@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import { getDisputeStore } from "@/server/disputes/get-dispute-store";
 import type { DisputeRecord } from "@/server/disputes/dispute-store";
 import { getOrderStore } from "@/server/orders/get-order-store";
+import { getReputationStore } from "@/server/reputation/get-reputation-store";
+import { applyDisputeOpened } from "@xolosarmy/reputation";
 
 interface OrderDisputeRouteContext {
   params: Promise<{
@@ -140,6 +142,27 @@ export async function POST(request: Request, context: OrderDisputeRouteContext) 
   if (updatedOrder === null) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
+
+  // --- REPUTATION ENGINE INJECTION ---
+  if (updatedOrder.intermediaryUserId) {
+    try {
+      const repStore = await getReputationStore();
+      const profile = await repStore.getProfile(updatedOrder.intermediaryUserId);
+      if (profile) {
+        const openedResult = applyDisputeOpened(profile, {
+          type: "dispute_opened",
+          userId: profile.userId,
+          orderId: updatedOrder.id,
+          occurredAt: new Date().toISOString(),
+        });
+        await repStore.saveProfile(openedResult.profile);
+        await repStore.addEvent(openedResult.event);
+      }
+    } catch (error) {
+      // Allow dispute opening to succeed even if reputation update fails
+    }
+  }
+  // -----------------------------------
 
   return NextResponse.json({
     order: updatedOrder,
