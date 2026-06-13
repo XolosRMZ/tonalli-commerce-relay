@@ -135,6 +135,8 @@ BASE_URL=http://localhost:3000 DATABASE_URL="$DATABASE_URL" bash scripts/orders-
 
 ### Prisma commerce flows
 
+`scripts/prisma-commerce-flows.sh` only tests commerce persistence for orders, evidence, and disputes. Use `scripts/prisma-full-stack-flows.sh` when you need auth plus commerce in full Prisma mode.
+
 ```bash
 docker compose up -d
 ```
@@ -164,6 +166,60 @@ TONALLI_ORDER_STORE=prisma \
 TONALLI_EVIDENCE_STORE=prisma \
 TONALLI_DISPUTE_STORE=prisma \
 bash scripts/prisma-commerce-flows.sh
+```
+
+
+## Full Prisma stack mode
+
+This mode uses:
+
+```bash
+TONALLI_AUTH_STORE=prisma
+TONALLI_AUTH_DEV_BYPASS=true
+TONALLI_ORDER_STORE=prisma
+TONALLI_EVIDENCE_STORE=prisma
+TONALLI_DISPUTE_STORE=prisma
+DATABASE_URL=...
+```
+
+Terminal 1:
+
+```bash
+docker compose up -d
+
+export DATABASE_URL="postgresql://tonalli:tonalli_dev_password@localhost:5432/tonalli_commerce_relay?schema=public"
+
+pnpm --filter @xolosarmy/db prisma migrate dev
+pnpm --filter @xolosarmy/db prisma generate
+```
+
+Terminal 2:
+
+```bash
+export DATABASE_URL="postgresql://tonalli:tonalli_dev_password@localhost:5432/tonalli_commerce_relay?schema=public"
+
+TONALLI_AUTH_STORE=prisma \
+TONALLI_AUTH_DEV_BYPASS=true \
+TONALLI_ORDER_STORE=prisma \
+TONALLI_EVIDENCE_STORE=prisma \
+TONALLI_DISPUTE_STORE=prisma \
+DATABASE_URL="$DATABASE_URL" \
+pnpm dev:web
+```
+
+Terminal 3:
+
+```bash
+export DATABASE_URL="postgresql://tonalli:tonalli_dev_password@localhost:5432/tonalli_commerce_relay?schema=public"
+
+BASE_URL=http://localhost:3000 \
+DATABASE_URL="$DATABASE_URL" \
+TONALLI_AUTH_STORE=prisma \
+TONALLI_AUTH_DEV_BYPASS=true \
+TONALLI_ORDER_STORE=prisma \
+TONALLI_EVIDENCE_STORE=prisma \
+TONALLI_DISPUTE_STORE=prisma \
+bash scripts/prisma-full-stack-flows.sh
 ```
 
 ## Happy path demo
