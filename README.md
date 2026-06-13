@@ -71,9 +71,9 @@ TONALLI_EVIDENCE_STORE=prisma
 TONALLI_DISPUTE_STORE=prisma
 ```
 
-`POST /api/orders/[id]/purchase` and `POST /api/orders/[id]/ship` use `TONALLI_EVIDENCE_STORE` to persist submitted evidence. The default is `memory`, so local happy-path scripts and development flows do not require a database.
+`POST /api/orders/[id]/purchase` and `POST /api/orders/[id]/ship` use `TONALLI_EVIDENCE_STORE` to persist submitted evidence. `POST /api/orders/[id]/dispute` and `POST /api/orders/[id]/resolve-dispute` use `TONALLI_DISPUTE_STORE` to persist the dispute lifecycle. The default is `memory`, so local happy-path scripts and development flows do not require a database.
 
-The Prisma evidence and dispute stores require `DATABASE_URL`, `docker compose`, and Prisma migrations. Use `TONALLI_EVIDENCE_STORE=prisma` only after the database schema has been migrated.
+The Prisma evidence and dispute stores require `DATABASE_URL`, `docker compose`, and Prisma migrations. Use `TONALLI_EVIDENCE_STORE=prisma` or `TONALLI_DISPUTE_STORE=prisma` only after the database schema has been migrated.
 
 ## Auth development
 

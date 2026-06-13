@@ -6,6 +6,8 @@ import type {
 } from "@xolosarmy/escrow-core";
 import { NextResponse } from "next/server";
 
+import { getDisputeStore } from "@/server/disputes/get-dispute-store";
+import type { DisputeRecord, DisputeStore } from "@/server/disputes/dispute-store";
 import { getOrderStore } from "@/server/orders/get-order-store";
 
 interface ResolveDisputeRouteContext {
@@ -88,6 +90,26 @@ export async function POST(request: Request, context: ResolveDisputeRouteContext
     );
   }
 
+  let disputeStore: DisputeStore;
+  let disputeRecord: DisputeRecord | null;
+
+  try {
+    disputeStore = await getDisputeStore();
+    disputeRecord = await disputeStore.findByOrderId(order.id);
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: "Failed to persist dispute resolution",
+        reason: errorReason(error, "DisputeStore failed"),
+      },
+      { status: 500 },
+    );
+  }
+
+  if (disputeRecord === null) {
+    return NextResponse.json({ error: "Dispute not found" }, { status: 404 });
+  }
+
   let body: unknown;
 
   try {
@@ -168,6 +190,10 @@ export async function POST(request: Request, context: ResolveDisputeRouteContext
     resolutionRequest.authority,
     resolutionRequest.resolution,
   );
+  const disputeResolutionStatus =
+    resolutionRequest.resolution === "release_to_intermediary"
+      ? "resolved_intermediary"
+      : "resolved_buyer";
   const participants: EscrowParticipants = {
     buyer: toEscrowParticipant("buyer", resolutionRequest.buyer),
     intermediary:
@@ -207,6 +233,45 @@ export async function POST(request: Request, context: ResolveDisputeRouteContext
     );
   }
 
+  let updatedDisputeRecord: DisputeRecord;
+
+  try {
+    // TODO: wrap dispute + order updates in DB transaction when Prisma stores are enabled.
+    const resolvedDispute = await disputeStore.updateDispute(disputeRecord.id, {
+      status: disputeResolutionStatus,
+      resolvedByUserId: resolutionRequest.resolvedByUserId,
+      resolution: resolutionRequest.resolution,
+      authority: resolutionRequest.authority,
+      resolvedAt: resolutionRequest.resolvedAt,
+    });
+
+    if (resolvedDispute === null) {
+      return NextResponse.json({ error: "Dispute not found" }, { status: 404 });
+    }
+
+    await disputeStore.addEvent({
+      disputeId: disputeRecord.id,
+      type: "dispute_resolved",
+      actorUserId: resolutionRequest.resolvedByUserId,
+      payload: {
+        resolution: resolutionRequest.resolution,
+        authority: resolutionRequest.authority,
+        route,
+        simulatedTxid: resolutionRequest.simulatedTxid,
+      },
+    });
+
+    updatedDisputeRecord = resolvedDispute;
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: "Failed to persist dispute resolution",
+        reason: errorReason(error, "DisputeStore failed"),
+      },
+      { status: 500 },
+    );
+  }
+
   const updatedOrder = await orderStore.update(order.id, {
     status:
       resolutionRequest.resolution === "release_to_intermediary"
@@ -222,10 +287,7 @@ export async function POST(request: Request, context: ResolveDisputeRouteContext
             ...order.escrow,
             refundTxid: resolutionRequest.simulatedTxid,
           },
-    disputeStatus:
-      resolutionRequest.resolution === "release_to_intermediary"
-        ? "resolved_intermediary"
-        : "resolved_buyer",
+    disputeStatus: disputeResolutionStatus,
     updatedAt: new Date().toISOString(),
   });
 
@@ -242,6 +304,7 @@ export async function POST(request: Request, context: ResolveDisputeRouteContext
       route,
       resolvedAt: resolutionRequest.resolvedAt,
     },
+    disputeRecord: updatedDisputeRecord,
     escrowTransactionDraft: draft,
     warning: "Simulated dispute resolution only. No XEC transaction was broadcast.",
   });

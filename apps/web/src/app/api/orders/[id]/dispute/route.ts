@@ -1,6 +1,8 @@
 import type { CommerceOrderStatus } from "@xolosarmy/models";
 import { NextResponse } from "next/server";
 
+import { getDisputeStore } from "@/server/disputes/get-dispute-store";
+import type { DisputeRecord } from "@/server/disputes/dispute-store";
 import { getOrderStore } from "@/server/orders/get-order-store";
 
 interface OrderDisputeRouteContext {
@@ -105,6 +107,30 @@ export async function POST(request: Request, context: OrderDisputeRouteContext) 
     );
   }
 
+  let disputeRecord: DisputeRecord;
+
+  try {
+    const disputeStore = await getDisputeStore();
+
+    // TODO: persist dispute evidence with EvidenceStore.
+    // TODO: wrap dispute + order updates in DB transaction when Prisma stores are enabled.
+    disputeRecord = await disputeStore.createDispute({
+      orderId: order.id,
+      status: "opened",
+      openedByUserId: disputeRequest.openedByUserId,
+      reason: disputeRequest.reason,
+      openedAt: disputeRequest.openedAt,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: "Failed to persist dispute",
+        reason: errorReason(error, "DisputeStore failed"),
+      },
+      { status: 500 },
+    );
+  }
+
   const updatedOrder = await orderStore.update(order.id, {
     status: "DISPUTED",
     disputeStatus: "opened",
@@ -125,7 +151,8 @@ export async function POST(request: Request, context: OrderDisputeRouteContext) 
       evidence: disputeRequest.evidence,
       openedAt: disputeRequest.openedAt,
     },
-    warning: "Dispute is simulated. Persistent dispute storage will be added later.",
+    disputeRecord,
+    warning: "Dispute evidence storage will be added later.",
   });
 }
 
