@@ -148,13 +148,22 @@ pnpm --filter @xolosarmy/db prisma migrate dev
 ```
 
 ```bash
-TONALLI_ORDER_STORE=prisma DATABASE_URL="$DATABASE_URL" pnpm dev:web
+TONALLI_ORDER_STORE=prisma \
+TONALLI_EVIDENCE_STORE=prisma \
+TONALLI_DISPUTE_STORE=prisma \
+DATABASE_URL="$DATABASE_URL" \
+pnpm dev:web
 ```
 
 In another terminal:
 
 ```bash
-BASE_URL=http://localhost:3000 DATABASE_URL="$DATABASE_URL" bash scripts/prisma-commerce-flows.sh
+BASE_URL=http://localhost:3000 \
+DATABASE_URL="$DATABASE_URL" \
+TONALLI_ORDER_STORE=prisma \
+TONALLI_EVIDENCE_STORE=prisma \
+TONALLI_DISPUTE_STORE=prisma \
+bash scripts/prisma-commerce-flows.sh
 ```
 
 ## Happy path demo

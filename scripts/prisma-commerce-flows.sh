@@ -14,6 +14,18 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
   exit 1
 fi
 
+if [[ "${TONALLI_ORDER_STORE:-}" != "prisma" ]]; then
+  echo "Warning: TONALLI_ORDER_STORE is not prisma." >&2
+fi
+
+if [[ "${TONALLI_EVIDENCE_STORE:-}" != "prisma" ]]; then
+  echo "Warning: TONALLI_EVIDENCE_STORE is not prisma." >&2
+fi
+
+if [[ "${TONALLI_DISPUTE_STORE:-}" != "prisma" ]]; then
+  echo "Warning: TONALLI_DISPUTE_STORE is not prisma." >&2
+fi
+
 export BASE_URL
 
 run_flow() {
