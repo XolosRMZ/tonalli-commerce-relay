@@ -1,8 +1,6 @@
 import type { TonalliMessageVerifier } from "@xolosarmy/tonalli-auth";
 
-import { EcashMessageVerifier } from "./ecash-message-verifier";
-
-const ecashMessageVerifier = new EcashMessageVerifier();
+let ecashMessageVerifier: TonalliMessageVerifier | undefined;
 
 export const devTonalliMessageVerifier: TonalliMessageVerifier = {
   async verify(input) {
@@ -24,6 +22,11 @@ export const tonalliMessageVerifier: TonalliMessageVerifier = {
   async verify(input) {
     if (await devTonalliMessageVerifier.verify(input)) {
       return true;
+    }
+
+    if (ecashMessageVerifier === undefined) {
+      const { EcashMessageVerifier } = await import("./ecash-message-verifier");
+      ecashMessageVerifier = new EcashMessageVerifier();
     }
 
     return ecashMessageVerifier.verify(input);
