@@ -1,18 +1,19 @@
-export async function verifyTonalliMessage(
-  message: string,
-  signature: string,
-  address: string,
-): Promise<boolean> {
-  void message;
-  void address;
+import type { TonalliMessageVerifier } from "@xolosarmy/tonalli-auth";
 
-  if (
-    process.env.TONALLI_AUTH_DEV_BYPASS === "true" &&
-    signature === "dev-valid-signature"
-  ) {
-    return true;
-  }
+export const devTonalliMessageVerifier: TonalliMessageVerifier = {
+  async verify(input) {
+    void input.address;
+    void input.message;
 
-  // TODO: integrate real Tonalli wallet signature verification from tonalli-core.
-  return false;
-}
+    if (
+      process.env.TONALLI_AUTH_DEV_BYPASS === "true" &&
+      input.signature === "dev-valid-signature"
+    ) {
+      return true;
+    }
+
+    return false;
+  },
+};
+
+export const tonalliMessageVerifier = devTonalliMessageVerifier;

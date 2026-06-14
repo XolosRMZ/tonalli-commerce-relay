@@ -4,15 +4,19 @@ import type {
   TonalliAuthVerificationResult,
 } from "./types";
 
+export interface TonalliMessageVerifier {
+  verify(input: {
+    address: string;
+    message: string;
+    signature: string;
+  }): Promise<boolean> | boolean;
+}
+
 export interface VerifyAuthSignatureParams {
   challenge: TonalliAuthChallenge;
   signature: string;
   expectedDomain: string;
-  verifyMessage?: (
-    message: string,
-    signature: string,
-    address: string,
-  ) => Promise<boolean> | boolean;
+  verifier?: TonalliMessageVerifier;
   now?: Date;
 }
 
@@ -50,16 +54,15 @@ export async function verifyAuthSignature(
 
   const message = formatChallengeForSigning(challenge);
 
-  if (params.verifyMessage === undefined) {
-    return invalid(challenge, "Missing verifyMessage implementation");
+  if (params.verifier === undefined) {
+    return invalid(challenge, "Missing TonalliMessageVerifier implementation");
   }
 
-  // TODO: wire this adapter to tonalli-core once Tonalli Wallet signing is ready.
-  const signatureIsValid = await params.verifyMessage(
+  const signatureIsValid = await params.verifier.verify({
+    address: challenge.address,
     message,
-    params.signature,
-    challenge.address,
-  );
+    signature: params.signature,
+  });
 
   if (!signatureIsValid) {
     return invalid(challenge, "Invalid signature");

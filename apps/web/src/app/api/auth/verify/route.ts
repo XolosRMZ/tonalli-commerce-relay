@@ -2,7 +2,7 @@ import { verifyAuthSignature } from "@xolosarmy/tonalli-auth";
 import { NextResponse } from "next/server";
 
 import { getAuthChallengeStore } from "@/server/auth/auth-store";
-import { verifyTonalliMessage } from "@/server/auth/verify-message";
+import { tonalliMessageVerifier } from "@/server/auth/verify-message";
 
 interface VerifyRequestBody {
   nonce?: unknown;
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     challenge,
     signature,
     expectedDomain: challenge.domain,
-    verifyMessage: verifyTonalliMessage,
+    verifier: tonalliMessageVerifier,
   });
 
   if (!result.valid) {

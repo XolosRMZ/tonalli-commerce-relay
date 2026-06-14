@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createAuthChallenge } from "./challenge";
+import { createAuthChallenge, formatChallengeForSigning } from "./challenge";
 import { verifyAuthSignature } from "./verify";
 
 const activeChallenge = createAuthChallenge({
@@ -17,7 +17,7 @@ describe("verifyAuthSignature", () => {
       challenge: activeChallenge,
       signature: "signature",
       expectedDomain: "other.local",
-      verifyMessage: () => true,
+      verifier: { verify: () => true },
       now: new Date("2026-01-01T00:01:00.000Z")
     });
 
@@ -30,7 +30,7 @@ describe("verifyAuthSignature", () => {
       challenge: activeChallenge,
       signature: "signature",
       expectedDomain: "tonalli.local",
-      verifyMessage: () => true,
+      verifier: { verify: () => true },
       now: new Date("2026-01-01T00:10:00.000Z")
     });
 
@@ -38,7 +38,7 @@ describe("verifyAuthSignature", () => {
     expect(result.reason).toBe("Challenge expired");
   });
 
-  it("fails when verifyMessage is missing", async () => {
+  it("fails when verifier is missing", async () => {
     const result = await verifyAuthSignature({
       challenge: activeChallenge,
       signature: "signature",
@@ -47,31 +47,31 @@ describe("verifyAuthSignature", () => {
     });
 
     expect(result.valid).toBe(false);
-    expect(result.reason).toBe("Missing verifyMessage implementation");
+    expect(result.reason).toBe("Missing TonalliMessageVerifier implementation");
   });
 
-  it("fails when verifyMessage returns false", async () => {
-    const verifyMessage = vi.fn(() => false);
+  it("fails when verifier returns false", async () => {
+    const verify = vi.fn(() => false);
     const result = await verifyAuthSignature({
       challenge: activeChallenge,
       signature: "signature",
       expectedDomain: "tonalli.local",
-      verifyMessage,
+      verifier: { verify },
       now: new Date("2026-01-01T00:01:00.000Z")
     });
 
     expect(result.valid).toBe(false);
     expect(result.reason).toBe("Invalid signature");
-    expect(verifyMessage).toHaveBeenCalledOnce();
+    expect(verify).toHaveBeenCalledOnce();
   });
 
-  it("passes when verifyMessage returns true", async () => {
-    const verifyMessage = vi.fn(() => true);
+  it("passes when verifier returns true", async () => {
+    const verify = vi.fn(() => true);
     const result = await verifyAuthSignature({
       challenge: activeChallenge,
       signature: "signature",
       expectedDomain: "tonalli.local",
-      verifyMessage,
+      verifier: { verify },
       now: new Date("2026-01-01T00:01:00.000Z")
     });
 
@@ -80,6 +80,23 @@ describe("verifyAuthSignature", () => {
       address: "ecash:qptest",
       alias: "xolos"
     });
-    expect(verifyMessage).toHaveBeenCalledOnce();
+    expect(verify).toHaveBeenCalledOnce();
+  });
+
+  it("passes the exact formatted challenge message to the verifier", async () => {
+    const verify = vi.fn(() => true);
+    await verifyAuthSignature({
+      challenge: activeChallenge,
+      signature: "signature",
+      expectedDomain: "tonalli.local",
+      verifier: { verify },
+      now: new Date("2026-01-01T00:01:00.000Z")
+    });
+
+    expect(verify).toHaveBeenCalledWith({
+      address: activeChallenge.address,
+      message: formatChallengeForSigning(activeChallenge),
+      signature: "signature"
+    });
   });
 });

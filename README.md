@@ -85,6 +85,8 @@ The Prisma evidence and dispute stores require `DATABASE_URL`, `docker compose`,
 - `DATABASE_URL` configured
 - `prisma migrate dev` executed
 
+TonalliAuth-v1 already has a dedicated `TonalliMessageVerifier` integration point for real wallet signatures. The current web verifier keeps `TONALLI_AUTH_DEV_BYPASS=true` support for smoke tests, while the real eCash signature implementation remains pending until Tonalli Wallet confirms the exact message, signature encoding, address format, public key recovery or address validation path, and compatible ECDSA/Schnorr algorithm.
+
 ### Prisma auth smoke test
 
 ```bash
