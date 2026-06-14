@@ -14,6 +14,7 @@
     "@xolosarmy/pricing": "workspace:*",
     "@xolosarmy/reputation": "workspace:*",
     "@xolosarmy/tonalli-auth": "workspace:*",
+    "ecash-lib": "4.12.0",
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

@@ -197,3 +197,14 @@ exacta: prefijo, hash, algoritmo, encoding o canonicalizacion.
   explicitamente condicionado a entorno de desarrollo.
 - Ejecutar `pnpm test` y `pnpm typecheck`.
 
+## Nota de implementacion
+
+El wrapper inicial de `EcashMessageVerifier` usa `ecash-lib.verifyMsg(message,
+signature, address)` y devuelve `false` ante firmas invalidas o errores de la
+libreria. La verificacion estricta en produccion sigue pendiente hasta contar
+con una fixture real de Tonalli Wallet que incluya `address`, challenge JSON,
+mensaje exacto y `signature`; hasta entonces se conserva
+`TONALLI_AUTH_DEV_BYPASS` como camino de desarrollo.
+
+TODO: reemplazar los tests con adapter mock por una fixture real de Tonalli
+Wallet antes de exigir la validacion real como unico requisito en produccion.

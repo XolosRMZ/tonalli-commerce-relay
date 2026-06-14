@@ -32,6 +32,9 @@ importers:
       '@xolosarmy/tonalli-auth':
         specifier: workspace:*
         version: link:../../packages/tonalli-auth
+      ecash-lib:
+        specifier: 4.12.0
+        version: 4.12.0
       next:
         specifier: ^15.0.0
         version: 15.5.19(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -676,6 +679,9 @@ packages:
     resolution: {integrity: sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==}
     engines: {node: '>=12'}
 
+  b58-ts@0.1.0:
+    resolution: {integrity: sha512-FC/2pfMxrlLQp1o9hwOGAy/1zCHYId5gpojwHL/BqoMFv/BnZXwHDH1zpx9jSL4C9k55Fm2R9j/F868qaQH5kw==}
+
   c12@3.1.0:
     resolution: {integrity: sha512-uWoS8OU1MEIsOv8p/5a82c3H31LsWVR5qiyXVfBNOzfffjUWtPnhAb4BYI2uG2HfGmZmFjCtui5XNWaps+iFuw==}
     peerDependencies:
@@ -752,6 +758,12 @@ packages:
   dotenv@16.6.1:
     resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
     engines: {node: '>=12'}
+
+  ecash-lib@4.12.0:
+    resolution: {integrity: sha512-Rz+Oc7cDhYYFEnfPsbCeiqSFXuJFaWqg9u0nkK3OpRpWZp5iJ+9t5LxcB59i8NhNwXG4vyL73GWR8fnrJay1DQ==}
+
+  ecashaddrjs@2.0.0:
+    resolution: {integrity: sha512-EvK1V4D3+nIEoD0ggy/b0F4lW39/72R9aOs/scm6kxMVuXu16btc+H74eQv7okNfXaQWKgolEekZkQ6wfcMMLw==}
 
   effect@3.21.0:
     resolution: {integrity: sha512-PPN80qRokCd1f015IANNhrwOnLO7GrrMQfk4/lnZRE/8j7UPWrNNjPV0uBrZutI/nHzernbW+J0hdqQysHiSnQ==}
@@ -1462,6 +1474,8 @@ snapshots:
 
   assertion-error@2.0.1: {}
 
+  b58-ts@0.1.0: {}
+
   c12@3.1.0:
     dependencies:
       chokidar: 4.0.3
@@ -1525,6 +1539,13 @@ snapshots:
     optional: true
 
   dotenv@16.6.1: {}
+
+  ecash-lib@4.12.0:
+    dependencies:
+      b58-ts: 0.1.0
+      ecashaddrjs: 2.0.0
+
+  ecashaddrjs@2.0.0: {}
 
   effect@3.21.0:
     dependencies:
