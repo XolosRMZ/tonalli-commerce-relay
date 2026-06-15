@@ -45,7 +45,7 @@ BASE_URL=http://localhost:3000 bash scripts/dispute-path.sh
 TONALLI_AUTH_DEV_BYPASS=true \
 TONALLI_REQUIRE_AUTH=true \
 TONALLI_AUTH_SESSION_SECRET=test-secret \
-TONALLI_ARBITRATOR_USER_IDS=ecash:qdevarbitratoraddressplaceholder00000000 \
+TONALLI_ARBITRATOR_USER_IDS=ecash:qautharbitratoraddressplaceholder0000000 \
 pnpm dev:web
 ```
 
@@ -73,7 +73,7 @@ TONALLI_ORDER_STORE=prisma \
 TONALLI_EVIDENCE_STORE=prisma \
 TONALLI_DISPUTE_STORE=prisma \
 TONALLI_REPUTATION_STORE=prisma \
-TONALLI_ARBITRATOR_USER_IDS=ecash:qdevarbitratoraddressplaceholder00000000 \
+TONALLI_ARBITRATOR_USER_IDS=ecash:qautharbitratoraddressplaceholder0000000 \
 DATABASE_URL="$DATABASE_URL" \
 pnpm dev:web
 ```

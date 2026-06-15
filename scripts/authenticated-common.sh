@@ -3,17 +3,17 @@
 BASE_URL="${BASE_URL:-http://localhost:3000}"
 DEMO_TIMESTAMP="2026-06-12T20:00:00.000Z"
 
-BUYER_USER_ID="ecash:qdevbuyeraddressplaceholder0000000000000000"
+BUYER_USER_ID="ecash:qauthbuyeraddressplaceholder000000000000000"
 BUYER_ADDRESS="$BUYER_USER_ID"
 BUYER_PUBLIC_KEY="dev-buyer-public-key-placeholder"
-BUYER_ALIAS="devbuyer.xec"
+BUYER_ALIAS="authbuyer.xec"
 
-INTERMEDIARY_USER_ID="ecash:qdevintermediaryaddressplaceholder000000"
+INTERMEDIARY_USER_ID="ecash:qauthintermediaryaddressplaceholder0000"
 INTERMEDIARY_ADDRESS="$INTERMEDIARY_USER_ID"
 INTERMEDIARY_PUBLIC_KEY="dev-intermediary-public-key-placeholder"
-INTERMEDIARY_ALIAS="devmerchant.xec"
+INTERMEDIARY_ALIAS="authmerchant.xec"
 
-ARBITRATOR_USER_ID="${TONALLI_TEST_ARBITRATOR_USER_ID:-ecash:qdevarbitratoraddressplaceholder00000000}"
+ARBITRATOR_USER_ID="${TONALLI_TEST_ARBITRATOR_USER_ID:-ecash:qautharbitratoraddressplaceholder0000000}"
 ARBITRATOR_ADDRESS="$ARBITRATOR_USER_ID"
 ARBITRATOR_PUBLIC_KEY="dev-arbitrator-public-key-placeholder"
 
