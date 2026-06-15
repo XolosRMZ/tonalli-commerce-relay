@@ -20,6 +20,7 @@ import {
 } from "@/server/auth/require-auth";
 import { getOrderStore } from "@/server/orders/get-order-store";
 import { validateOriginHeader } from "@/server/security/request-guards";
+import { rateLimitExceededResponse, rateLimitRequest } from "@/server/security/rate-limit";
 import { getReputationStore } from "@/server/reputation/get-reputation-store";
 import { applyDisputeWon, applyDisputeLost } from "@xolosarmy/reputation";
 
@@ -89,6 +90,18 @@ export async function POST(request: Request, context: ResolveDisputeRouteContext
 
   if (authRequired && sessionUser === null) {
     return unauthorizedResponse();
+  }
+
+  const rateLimit = await rateLimitRequest({
+    request,
+    route: "/api/orders/:id/resolve-dispute",
+    limit: 60,
+    windowMs: 60_000,
+    identity: sessionUser === null ? undefined : getSessionUserId(sessionUser),
+  });
+
+  if (!rateLimit.allowed) {
+    return rateLimitExceededResponse(rateLimit);
   }
 
   const { id } = await context.params;

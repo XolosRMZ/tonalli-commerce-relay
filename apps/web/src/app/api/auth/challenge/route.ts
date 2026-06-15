@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 
 import { getAuthChallengeStore } from "@/server/auth/auth-store";
 import { validateHostHeader } from "@/server/security/request-guards";
+import { rateLimitExceededResponse, rateLimitRequest } from "@/server/security/rate-limit";
 
 interface ChallengeRequestBody {
   address?: unknown;
@@ -39,6 +40,18 @@ export async function POST(request: Request) {
   }
 
   const address = body.address.trim();
+  const rateLimit = await rateLimitRequest({
+    request,
+    route: "/api/auth/challenge",
+    limit: 20,
+    windowMs: 60_000,
+    identity: address,
+  });
+
+  if (!rateLimit.allowed) {
+    return rateLimitExceededResponse(rateLimit);
+  }
+
   const alias = body.alias?.trim();
   const domain = hostValidation.value;
   const nonce = crypto.randomUUID();

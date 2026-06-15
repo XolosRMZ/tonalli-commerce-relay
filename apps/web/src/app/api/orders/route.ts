@@ -18,6 +18,7 @@ import {
 } from "@/server/auth/require-auth";
 import { getOrderStore } from "@/server/orders/get-order-store";
 import { validateOriginHeader } from "@/server/security/request-guards";
+import { rateLimitExceededResponse, rateLimitRequest } from "@/server/security/rate-limit";
 
 interface OrderRequestBody {
   buyerUserId?: unknown;
@@ -69,6 +70,18 @@ export async function POST(request: Request) {
 
   if (authRequired && sessionUser === null) {
     return unauthorizedResponse();
+  }
+
+  const rateLimit = await rateLimitRequest({
+    request,
+    route: "/api/orders",
+    limit: 60,
+    windowMs: 60_000,
+    identity: sessionUser === null ? undefined : getSessionUserId(sessionUser),
+  });
+
+  if (!rateLimit.allowed) {
+    return rateLimitExceededResponse(rateLimit);
   }
 
   let body: unknown;

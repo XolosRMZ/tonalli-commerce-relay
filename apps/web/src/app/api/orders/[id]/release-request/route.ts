@@ -12,6 +12,7 @@ import {
 } from "@/server/auth/require-auth";
 import { getOrderStore } from "@/server/orders/get-order-store";
 import { validateOriginHeader } from "@/server/security/request-guards";
+import { rateLimitExceededResponse, rateLimitRequest } from "@/server/security/rate-limit";
 
 interface OrderReleaseRequestRouteContext {
   params: Promise<{
@@ -59,6 +60,18 @@ export async function POST(
 
   if (authRequired && sessionUser === null) {
     return unauthorizedResponse();
+  }
+
+  const rateLimit = await rateLimitRequest({
+    request,
+    route: "/api/orders/:id/release-request",
+    limit: 60,
+    windowMs: 60_000,
+    identity: sessionUser === null ? undefined : getSessionUserId(sessionUser),
+  });
+
+  if (!rateLimit.allowed) {
+    return rateLimitExceededResponse(rateLimit);
   }
 
   const { id } = await context.params;

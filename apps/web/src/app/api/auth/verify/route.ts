@@ -5,6 +5,7 @@ import { getAuthChallengeStore } from "@/server/auth/auth-store";
 import { setTonalliSessionCookie } from "@/server/auth/session";
 import { tonalliMessageVerifier } from "@/server/auth/verify-message";
 import { validateOriginHeader } from "@/server/security/request-guards";
+import { rateLimitExceededResponse, rateLimitRequest } from "@/server/security/rate-limit";
 
 interface VerifyRequestBody {
   nonce?: unknown;
@@ -42,6 +43,18 @@ export async function POST(request: Request) {
 
   const nonce = body.nonce.trim();
   const signature = body.signature.trim();
+  const rateLimit = await rateLimitRequest({
+    request,
+    route: "/api/auth/verify",
+    limit: 20,
+    windowMs: 60_000,
+    identity: nonce,
+  });
+
+  if (!rateLimit.allowed) {
+    return rateLimitExceededResponse(rateLimit);
+  }
+
   const authChallengeStore = await getAuthChallengeStore();
   const challenge = await authChallengeStore.findByNonce(nonce);
 
