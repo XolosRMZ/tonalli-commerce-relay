@@ -169,4 +169,3 @@ upgrades after validating Next/Vite compatibility.
 - `postcss` via `next`
 
 These advisories must be reviewed before a final production release. CI still prints the audit report, but it does not block the pipeline until the dependency updates are verified not to break the monorepo.
-
