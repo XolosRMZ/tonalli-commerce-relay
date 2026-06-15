@@ -15,6 +15,7 @@ import {
 } from "@/server/auth/require-auth";
 import { getOrderStore } from "@/server/orders/get-order-store";
 import { validateOriginHeader } from "@/server/security/request-guards";
+import { internalErrorResponse } from "@/server/security/api-errors";
 import { rateLimitExceededResponse, rateLimitRequest } from "@/server/security/rate-limit";
 import { getReputationStore } from "@/server/reputation/get-reputation-store";
 import { applyDisputeOpened } from "@xolosarmy/reputation";
@@ -174,13 +175,11 @@ export async function POST(request: Request, context: OrderDisputeRouteContext) 
       openedAt: disputeRequest.openedAt,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: "Failed to persist dispute",
-        reason: errorReason(error, "DisputeStore failed"),
-      },
-      { status: 500 },
-    );
+    return internalErrorResponse(error, {
+      route: "/api/orders/:id/dispute",
+      orderId: order.id,
+      user: disputeRequest.openedByUserId,
+    });
   }
 
   const updatedOrder = await orderStore.update(order.id, {

@@ -14,6 +14,7 @@ import {
 } from "@/server/auth/require-auth";
 import { getOrderStore } from "@/server/orders/get-order-store";
 import { validateOriginHeader } from "@/server/security/request-guards";
+import { internalErrorResponse } from "@/server/security/api-errors";
 import { rateLimitExceededResponse, rateLimitRequest } from "@/server/security/rate-limit";
 import { getReputationStore } from "@/server/reputation/get-reputation-store";
 import {
@@ -214,13 +215,11 @@ export async function POST(request: Request, context: OrderReleaseRouteContext) 
       networkFeeXec: releaseRequest.networkFeeXec,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: "Failed to create escrow transaction draft",
-        reason: errorReason(error, "createEscrowTransactionDraft failed"),
-      },
-      { status: 500 },
-    );
+    return internalErrorResponse(error, {
+      route: "/api/orders/:id/release",
+      orderId: order.id,
+      user: releaseRequest.buyerUserId,
+    });
   }
 
   const updatedOrder = await orderStore.update(order.id, {

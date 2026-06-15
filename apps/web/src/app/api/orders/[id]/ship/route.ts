@@ -14,6 +14,7 @@ import {
 } from "@/server/auth/require-auth";
 import { getOrderStore } from "@/server/orders/get-order-store";
 import { validateOriginHeader } from "@/server/security/request-guards";
+import { internalErrorResponse } from "@/server/security/api-errors";
 import { rateLimitExceededResponse, rateLimitRequest } from "@/server/security/rate-limit";
 
 interface OrderShipRouteContext {
@@ -180,7 +181,7 @@ export async function POST(request: Request, context: OrderShipRouteContext) {
       submittedAt: shipRequest.shippedAt,
     });
   } catch (error) {
-    return failedEvidencePersistenceResponse(error);
+    return failedEvidencePersistenceResponse(error, order.id, shipRequest.intermediaryUserId);
   }
 
   // TODO: Wrap evidence + order update in a DB transaction when using Prisma.
@@ -351,14 +352,12 @@ function invalidShipOrderRequestResponse(reason: string) {
   );
 }
 
-function failedEvidencePersistenceResponse(error: unknown) {
-  return NextResponse.json(
-    {
-      error: "Failed to persist evidence",
-      reason: errorReason(error, "Unknown evidence persistence failure"),
-    },
-    { status: 500 },
-  );
+function failedEvidencePersistenceResponse(error: unknown, orderId: string, user: string) {
+  return internalErrorResponse(error, {
+    route: "/api/orders/:id/ship",
+    orderId,
+    user,
+  });
 }
 
 function errorReason(error: unknown, fallback: string): string {
