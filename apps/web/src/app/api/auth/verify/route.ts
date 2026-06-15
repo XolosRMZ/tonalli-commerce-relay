@@ -2,6 +2,7 @@ import { verifyAuthSignature } from "@xolosarmy/tonalli-auth";
 import { NextResponse } from "next/server";
 
 import { getAuthChallengeStore } from "@/server/auth/auth-store";
+import { setTonalliSessionCookie } from "@/server/auth/session";
 import { tonalliMessageVerifier } from "@/server/auth/verify-message";
 
 interface VerifyRequestBody {
@@ -68,9 +69,17 @@ export async function POST(request: Request) {
 
   await authChallengeStore.markUsed(nonce);
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     valid: true,
     address: result.address,
     alias: result.alias,
+    authenticated: true,
   });
+
+  await setTonalliSessionCookie(response, {
+    address: result.address,
+    alias: result.alias,
+  });
+
+  return response;
 }
