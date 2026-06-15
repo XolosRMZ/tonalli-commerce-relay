@@ -55,4 +55,10 @@ run_flow "Happy path with full Prisma mode" "happy-path.sh"
 run_flow "Refund path with full Prisma mode" "refund-path.sh"
 run_flow "Dispute path with full Prisma mode" "dispute-path.sh"
 
+if [[ "${TONALLI_REQUIRE_AUTH:-}" == "true" ]]; then
+  run_flow "Authenticated Prisma happy path" "authenticated-happy-path.sh"
+  run_flow "Authenticated Prisma refund path" "authenticated-refund-path.sh"
+  run_flow "Authenticated Prisma dispute path" "authenticated-dispute-path.sh"
+fi
+
 printf '\nFull Prisma stack flows completed successfully\n'
