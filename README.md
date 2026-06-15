@@ -243,6 +243,8 @@ pnpm dev:web
 BASE_URL=http://localhost:3000 bash scripts/happy-path.sh
 ```
 
+
+
 ### Create auth challenge
 
 POST `/api/auth/challenge`
