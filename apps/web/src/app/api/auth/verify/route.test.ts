@@ -9,6 +9,7 @@ describe("POST /api/auth/verify", () => {
   afterEach(() => {
     delete process.env.TONALLI_AUTH_DEV_BYPASS;
     delete process.env.TONALLI_AUTH_SESSION_SECRET;
+    delete process.env.ALLOWED_ORIGINS;
   });
 
   it("emits a session cookie for a valid signature", async () => {
@@ -74,6 +75,28 @@ describe("POST /api/auth/verify", () => {
     consoleError.mockRestore();
 
     expect(response.status).toBe(401);
+    expect(response.headers.get("set-cookie")).toBeNull();
+  });
+
+  it("rejects an invalid origin", async () => {
+    process.env.ALLOWED_ORIGINS = "https://xolosarmy.xyz";
+
+    const response = await POST(
+      new Request("https://xolosarmy.xyz/api/auth/verify", {
+        method: "POST",
+        headers: { origin: "https://evil.example" },
+        body: JSON.stringify({
+          nonce: "nonce",
+          signature: "signature",
+        }),
+      }),
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid origin",
+      reason: "Origin header is not allowed",
+    });
+    expect(response.status).toBe(403);
     expect(response.headers.get("set-cookie")).toBeNull();
   });
 });

@@ -3,6 +3,7 @@ import type { EscrowParticipant, EscrowParticipants } from "@xolosarmy/escrow-co
 import { NextResponse } from "next/server";
 
 import { getOrderStore } from "@/server/orders/get-order-store";
+import { validateOriginHeader } from "@/server/security/request-guards";
 
 interface OrderFundRouteContext {
   params: Promise<{
@@ -41,6 +42,15 @@ type FundOrderRequestValidation =
   | { valid: false; reason: string };
 
 export async function POST(request: Request, context: OrderFundRouteContext) {
+  const originValidation = validateOriginHeader(request);
+
+  if (!originValidation.valid) {
+    return NextResponse.json(
+      { error: "Invalid origin", reason: originValidation.reason },
+      { status: 403 },
+    );
+  }
+
   const { id } = await context.params;
   const orderStore = await getOrderStore();
   const order = await orderStore.findById(id);

@@ -7,6 +7,7 @@ import type {
 import { NextResponse } from "next/server";
 
 import { getOrderStore } from "@/server/orders/get-order-store";
+import { validateOriginHeader } from "@/server/security/request-guards";
 
 interface OrderRequestBody {
   buyerUserId?: unknown;
@@ -44,6 +45,15 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const originValidation = validateOriginHeader(request);
+
+  if (!originValidation.valid) {
+    return NextResponse.json(
+      { error: "Invalid origin", reason: originValidation.reason },
+      { status: 403 },
+    );
+  }
+
   let body: unknown;
 
   try {

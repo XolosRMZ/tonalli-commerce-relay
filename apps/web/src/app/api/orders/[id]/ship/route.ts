@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { EvidenceRecord } from "@/server/evidence/evidence-store";
 import { getEvidenceStore } from "@/server/evidence/get-evidence-store";
 import { getOrderStore } from "@/server/orders/get-order-store";
+import { validateOriginHeader } from "@/server/security/request-guards";
 
 interface OrderShipRouteContext {
   params: Promise<{
@@ -50,6 +51,15 @@ type ShipOrderRequestValidation =
   | { valid: false; reason: string };
 
 export async function POST(request: Request, context: OrderShipRouteContext) {
+  const originValidation = validateOriginHeader(request);
+
+  if (!originValidation.valid) {
+    return NextResponse.json(
+      { error: "Invalid origin", reason: originValidation.reason },
+      { status: 403 },
+    );
+  }
+
   const { id } = await context.params;
   const orderStore = await getOrderStore();
   const order = await orderStore.findById(id);

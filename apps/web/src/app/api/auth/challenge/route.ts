@@ -5,6 +5,7 @@ import {
 import { NextResponse } from "next/server";
 
 import { getAuthChallengeStore } from "@/server/auth/auth-store";
+import { validateHostHeader } from "@/server/security/request-guards";
 
 interface ChallengeRequestBody {
   address?: unknown;
@@ -28,9 +29,18 @@ export async function POST(request: Request) {
     );
   }
 
+  const hostValidation = validateHostHeader(request);
+
+  if (!hostValidation.valid) {
+    return NextResponse.json(
+      { error: "Invalid host", reason: hostValidation.reason },
+      { status: 400 },
+    );
+  }
+
   const address = body.address.trim();
   const alias = body.alias?.trim();
-  const domain = request.headers.get("host") ?? "localhost";
+  const domain = hostValidation.value;
   const nonce = crypto.randomUUID();
   const challenge = createAuthChallenge({
     domain,

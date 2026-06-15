@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { getAuthChallengeStore } from "@/server/auth/auth-store";
 import { setTonalliSessionCookie } from "@/server/auth/session";
 import { tonalliMessageVerifier } from "@/server/auth/verify-message";
+import { validateOriginHeader } from "@/server/security/request-guards";
 
 interface VerifyRequestBody {
   nonce?: unknown;
@@ -11,6 +12,15 @@ interface VerifyRequestBody {
 }
 
 export async function POST(request: Request) {
+  const originValidation = validateOriginHeader(request);
+
+  if (!originValidation.valid) {
+    return NextResponse.json(
+      { error: "Invalid origin", reason: originValidation.reason },
+      { status: 403 },
+    );
+  }
+
   const body = (await request.json()) as VerifyRequestBody;
 
   if (typeof body.nonce !== "string" || body.nonce.trim().length === 0) {

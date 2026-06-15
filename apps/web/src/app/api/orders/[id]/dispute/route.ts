@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { getDisputeStore } from "@/server/disputes/get-dispute-store";
 import type { DisputeRecord } from "@/server/disputes/dispute-store";
 import { getOrderStore } from "@/server/orders/get-order-store";
+import { validateOriginHeader } from "@/server/security/request-guards";
 import { getReputationStore } from "@/server/reputation/get-reputation-store";
 import { applyDisputeOpened } from "@xolosarmy/reputation";
 
@@ -59,6 +60,15 @@ const DISPUTABLE_ORDER_STATUSES: CommerceOrderStatus[] = [
 ];
 
 export async function POST(request: Request, context: OrderDisputeRouteContext) {
+  const originValidation = validateOriginHeader(request);
+
+  if (!originValidation.valid) {
+    return NextResponse.json(
+      { error: "Invalid origin", reason: originValidation.reason },
+      { status: 403 },
+    );
+  }
+
   const { id } = await context.params;
   const orderStore = await getOrderStore();
   const order = await orderStore.findById(id);

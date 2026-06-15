@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import { getDisputeStore } from "@/server/disputes/get-dispute-store";
 import type { DisputeRecord, DisputeStore } from "@/server/disputes/dispute-store";
 import { getOrderStore } from "@/server/orders/get-order-store";
+import { validateOriginHeader } from "@/server/security/request-guards";
 import { getReputationStore } from "@/server/reputation/get-reputation-store";
 import { applyDisputeWon, applyDisputeLost } from "@xolosarmy/reputation";
 
@@ -64,6 +65,15 @@ type ResolveDisputeRequestValidation =
   | { valid: false; reason: string };
 
 export async function POST(request: Request, context: ResolveDisputeRouteContext) {
+  const originValidation = validateOriginHeader(request);
+
+  if (!originValidation.valid) {
+    return NextResponse.json(
+      { error: "Invalid origin", reason: originValidation.reason },
+      { status: 403 },
+    );
+  }
+
   const { id } = await context.params;
   const orderStore = await getOrderStore();
   const order = await orderStore.findById(id);
