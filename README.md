@@ -12,6 +12,10 @@ It uses:
 
 > Where XEC is not accepted, Tonalli buys for you.
 
+## Production readiness
+
+See `docs/PRODUCTION_READINESS.md` for environment variables, production validation, authenticated smoke tests, WalletConnect auth, healthcheck, audit findings, and pending production work.
+
 ## Development API
 
 ## Database development
