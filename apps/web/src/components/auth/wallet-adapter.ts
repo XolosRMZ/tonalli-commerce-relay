@@ -1,8 +1,13 @@
 export interface TonalliWalletConnector {
+  connect(): Promise<void>;
   signMessage(input: { address: string; message: string }): Promise<string>;
 }
 
 export class MockTonalliWalletConnector implements TonalliWalletConnector {
+  async connect(): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
   async signMessage(input: {
     address: string;
     message: string;

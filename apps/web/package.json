@@ -8,6 +8,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@walletconnect/universal-provider": "^2.23.9",
     "@xolosarmy/db": "workspace:*",
     "@xolosarmy/escrow-core": "workspace:*",
     "@xolosarmy/models": "workspace:*",

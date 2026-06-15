@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { MockTonalliWalletConnector } from "./wallet-adapter";
+import { createTonalliWalletConnector } from "./walletconnect-tonalli-connector";
 
 interface TonalliAuthChallenge {
   domain: string;
@@ -23,17 +23,26 @@ interface ChallengeResponse {
 
 interface VerifyResponse {
   valid: boolean;
+  authenticated?: boolean;
   address?: string;
   alias?: string;
   reason?: string;
 }
 
-type Step = "challenge" | "sign" | "verify";
+type Step = "challenge" | "connect" | "sign" | "verify";
+type AuthStatus =
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "signing"
+  | "verifying"
+  | "verified"
+  | "failed";
 
 const defaultAddress = "ecash:qzdq0q65fwnt94rlcph5kllj0xcry6e0v58zrgp7a3";
 
 export function TonalliWalletConnectAuth() {
-  const connector = useMemo(() => new MockTonalliWalletConnector(), []);
+  const connector = useMemo(() => createTonalliWalletConnector(), []);
   const [address, setAddress] = useState(defaultAddress);
   const [alias, setAlias] = useState("");
   const [challengeResponse, setChallengeResponse] =
@@ -42,8 +51,25 @@ export function TonalliWalletConnectAuth() {
   const [verifyResult, setVerifyResult] = useState<VerifyResponse | null>(null);
   const [error, setError] = useState("");
   const [loadingStep, setLoadingStep] = useState<Step | null>(null);
+  const [status, setStatus] = useState<AuthStatus>("disconnected");
 
   const message = challengeResponse?.message ?? "";
+
+  async function connectWallet() {
+    setError("");
+    setLoadingStep("connect");
+    setStatus("connecting");
+
+    try {
+      await connector.connect();
+      setStatus("connected");
+    } catch (caught) {
+      setStatus("failed");
+      setError(errorMessage(caught));
+    } finally {
+      setLoadingStep(null);
+    }
+  }
 
   async function createChallenge() {
     setError("");
@@ -86,6 +112,7 @@ export function TonalliWalletConnectAuth() {
     }
 
     setLoadingStep("sign");
+    setStatus("signing");
 
     try {
       const nextSignature = await connector.signMessage({
@@ -115,6 +142,7 @@ export function TonalliWalletConnectAuth() {
     }
 
     setLoadingStep("verify");
+    setStatus("verifying");
 
     try {
       const response = await fetch("/api/auth/verify", {
@@ -134,7 +162,10 @@ export function TonalliWalletConnectAuth() {
       setVerifyResult(body);
 
       if (!response.ok) {
+        setStatus("failed");
         setError(body.reason ?? "Signature verification failed");
+      } else if (body.authenticated === true || body.valid) {
+        setStatus("verified");
       }
     } catch (caught) {
       setError(errorMessage(caught));
@@ -163,7 +194,16 @@ export function TonalliWalletConnectAuth() {
             style={styles.input}
           />
         </label>
+        <p style={styles.status}>Status: {status}</p>
         <div style={styles.actions}>
+          <button
+            type="button"
+            onClick={connectWallet}
+            disabled={loadingStep !== null || status === "connected" || status === "verified"}
+            style={styles.button}
+          >
+            {loadingStep === "connect" ? "Connecting..." : "Connect wallet"}
+          </button>
           <button
             type="button"
             onClick={createChallenge}
@@ -178,7 +218,7 @@ export function TonalliWalletConnectAuth() {
             disabled={loadingStep !== null || challengeResponse === null}
             style={styles.button}
           >
-            {loadingStep === "sign" ? "Signing..." : "Sign with mock"}
+            {loadingStep === "sign" ? "Signing..." : "Sign message"}
           </button>
           <button
             type="button"
@@ -253,6 +293,7 @@ function isVerifyResponse(value: unknown): value is VerifyResponse {
   return (
     isRecord(value) &&
     typeof value.valid === "boolean" &&
+    (value.authenticated === undefined || typeof value.authenticated === "boolean") &&
     (value.address === undefined || typeof value.address === "string") &&
     (value.alias === undefined || typeof value.alias === "string") &&
     (value.reason === undefined || typeof value.reason === "string")
@@ -301,6 +342,10 @@ const styles = {
     borderRadius: "6px",
     font: "inherit",
     padding: "0.65rem 0.75rem",
+  },
+  status: {
+    fontWeight: 700,
+    margin: 0,
   },
   actions: {
     display: "flex",

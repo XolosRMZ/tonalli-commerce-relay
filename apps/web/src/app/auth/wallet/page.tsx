@@ -14,7 +14,7 @@ export default function TonalliWalletAuthPage() {
     >
       <header style={{ display: "grid", gap: "0.5rem" }}>
         <h1 style={{ fontSize: "2rem", lineHeight: 1.15, margin: 0 }}>
-          Tonalli WalletConnect Auth Spike
+          Tonalli Wallet Auth
         </h1>
         <p
           style={{
@@ -25,8 +25,7 @@ export default function TonalliWalletAuthPage() {
             padding: "0.75rem",
           }}
         >
-          Development spike. Mock connector uses dev-valid-signature and
-          requires TONALLI_AUTH_DEV_BYPASS=true.
+          Use the mock connector in development with TONALLI_AUTH_DEV_BYPASS=true, or enable the WalletConnect connector with NEXT_PUBLIC_TONALLI_WALLET_CONNECTOR=walletconnect.
         </p>
       </header>
       <TonalliWalletConnectAuth />

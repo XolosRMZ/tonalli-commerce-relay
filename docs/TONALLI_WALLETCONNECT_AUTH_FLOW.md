@@ -75,7 +75,7 @@ Expected wallet response:
 }
 ```
 
-The current spike uses `MockTonalliWalletConnector`, which returns `dev-valid-signature` for a non-empty message and an address that starts with `ecash:`.
+The frontend now selects a connector through `NEXT_PUBLIC_TONALLI_WALLET_CONNECTOR`. Use `mock` for the development connector, or `walletconnect` for the real WalletConnect adapter. The mock connector returns `dev-valid-signature` for a non-empty message and an address that starts with `ecash:`.
 
 ## `POST /api/auth/verify`
 
@@ -113,7 +113,18 @@ For the mock signature to validate, run the server with:
 TONALLI_AUTH_DEV_BYPASS=true
 ```
 
+## Frontend environment
+
+```bash
+NEXT_PUBLIC_TONALLI_WALLET_CONNECTOR=mock
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=...
+NEXT_PUBLIC_TONALLI_WC_RELAY_URL=... # optional
+```
+
+When `NEXT_PUBLIC_TONALLI_WALLET_CONNECTOR=walletconnect`, the relay initializes `/universal-provider` in the browser, requests namespace `ecash` on chain `ecash:1`, and sends `ecash_signMessage` with `{ address, message }`. The expected result is a non-empty base64 signature string.
+
 ## Pending
 
 - Add a golden fixture signed by RMZWallet/Tonalli Wallet.
-- Replace `MockTonalliWalletConnector` with a real WalletConnect implementation using namespace `ecash:1` and method `ecash_signMessage`.
+- Confirm the real RMZWallet/Tonalli Wallet project id and mobile/deep-link behavior in a manual WalletConnect session.
+- Confirm the golden signature fixture from RMZWallet/Tonalli Wallet.
