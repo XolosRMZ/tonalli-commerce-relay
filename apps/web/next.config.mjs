@@ -8,7 +8,7 @@ if (process.env.NODE_ENV === "production") {
 
   for (const name of requiredEnv) {
     if (!process.env[name]) {
-      throw new Error(` is required`);
+      throw new Error(`${name} is required`);
     }
   }
 

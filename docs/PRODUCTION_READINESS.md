@@ -160,3 +160,13 @@ upgrades after validating Next/Vite compatibility.
 - Transaction-level signatures for commerce actions.
 - Golden real RMZWallet/Tonalli Wallet signature fixture.
 - External security review.
+
+## Temporary audit exceptions
+
+`pnpm audit` is currently configured as report-only in CI because the current dependency graph reports known upstream advisories:
+
+- `esbuild` via `vitest > vite`
+- `postcss` via `next`
+
+These advisories must be reviewed before a final production release. CI still prints the audit report, but it does not block the pipeline until the dependency updates are verified not to break the monorepo.
+
