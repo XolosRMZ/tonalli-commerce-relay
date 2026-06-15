@@ -2,6 +2,16 @@ import { NextResponse } from "next/server";
 
 import type { EvidenceRecord } from "@/server/evidence/evidence-store";
 import { getEvidenceStore } from "@/server/evidence/get-evidence-store";
+import {
+  assertSameUser,
+  forbiddenResponse,
+  getAuthorizedArbitratorUserIds,
+  getAuthorizedModeratorUserIds,
+  getSessionUserId,
+  isProductionAuthRequired,
+  requireTonalliUser,
+  unauthorizedResponse,
+} from "@/server/auth/require-auth";
 import { getOrderStore } from "@/server/orders/get-order-store";
 import { validateOriginHeader } from "@/server/security/request-guards";
 
@@ -71,6 +81,13 @@ export async function POST(request: Request, context: OrderPurchaseRouteContext)
     );
   }
 
+  const authRequired = isProductionAuthRequired();
+  const sessionUser = await requireTonalliUser(request);
+
+  if (authRequired && sessionUser === null) {
+    return unauthorizedResponse();
+  }
+
   const { id } = await context.params;
   const orderStore = await getOrderStore();
   const order = await orderStore.findById(id);
@@ -106,6 +123,16 @@ export async function POST(request: Request, context: OrderPurchaseRouteContext)
   }
 
   const purchaseRequest = validation.request;
+
+  if (authRequired && sessionUser !== null) {
+    if (
+      order.intermediaryUserId === undefined ||
+      !assertSameUser(sessionUser, order.intermediaryUserId) ||
+      !assertSameUser(sessionUser, purchaseRequest.intermediaryUserId)
+    ) {
+      return forbiddenResponse();
+    }
+  }
 
   if (order.intermediaryUserId === undefined) {
     return NextResponse.json(

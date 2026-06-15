@@ -3,6 +3,16 @@ import { NextResponse } from "next/server";
 
 import { getDisputeStore } from "@/server/disputes/get-dispute-store";
 import type { DisputeRecord } from "@/server/disputes/dispute-store";
+import {
+  assertSameUser,
+  forbiddenResponse,
+  getAuthorizedArbitratorUserIds,
+  getAuthorizedModeratorUserIds,
+  getSessionUserId,
+  isProductionAuthRequired,
+  requireTonalliUser,
+  unauthorizedResponse,
+} from "@/server/auth/require-auth";
 import { getOrderStore } from "@/server/orders/get-order-store";
 import { validateOriginHeader } from "@/server/security/request-guards";
 import { getReputationStore } from "@/server/reputation/get-reputation-store";
@@ -69,6 +79,13 @@ export async function POST(request: Request, context: OrderDisputeRouteContext) 
     );
   }
 
+  const authRequired = isProductionAuthRequired();
+  const sessionUser = await requireTonalliUser(request);
+
+  if (authRequired && sessionUser === null) {
+    return unauthorizedResponse();
+  }
+
   const { id } = await context.params;
   const orderStore = await getOrderStore();
   const order = await orderStore.findById(id);
@@ -105,6 +122,16 @@ export async function POST(request: Request, context: OrderDisputeRouteContext) 
   }
 
   const disputeRequest = validation.request;
+
+  if (authRequired && sessionUser !== null) {
+    if (
+      !assertSameUser(sessionUser, disputeRequest.openedByUserId) ||
+      (getSessionUserId(sessionUser) !== order.buyerUserId &&
+        getSessionUserId(sessionUser) !== order.intermediaryUserId)
+    ) {
+      return forbiddenResponse();
+    }
+  }
 
   if (
     disputeRequest.openedByUserId !== order.buyerUserId &&

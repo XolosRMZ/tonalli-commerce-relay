@@ -8,6 +8,16 @@ import { NextResponse } from "next/server";
 
 import { getDisputeStore } from "@/server/disputes/get-dispute-store";
 import type { DisputeRecord, DisputeStore } from "@/server/disputes/dispute-store";
+import {
+  assertSameUser,
+  forbiddenResponse,
+  getAuthorizedArbitratorUserIds,
+  getAuthorizedModeratorUserIds,
+  getSessionUserId,
+  isProductionAuthRequired,
+  requireTonalliUser,
+  unauthorizedResponse,
+} from "@/server/auth/require-auth";
 import { getOrderStore } from "@/server/orders/get-order-store";
 import { validateOriginHeader } from "@/server/security/request-guards";
 import { getReputationStore } from "@/server/reputation/get-reputation-store";
@@ -72,6 +82,13 @@ export async function POST(request: Request, context: ResolveDisputeRouteContext
       { error: "Invalid origin", reason: originValidation.reason },
       { status: 403 },
     );
+  }
+
+  const authRequired = isProductionAuthRequired();
+  const sessionUser = await requireTonalliUser(request);
+
+  if (authRequired && sessionUser === null) {
+    return unauthorizedResponse();
   }
 
   const { id } = await context.params;
@@ -139,6 +156,21 @@ export async function POST(request: Request, context: ResolveDisputeRouteContext
   }
 
   const resolutionRequest = validation.request;
+
+  if (authRequired && sessionUser !== null) {
+    const sessionUserId = getSessionUserId(sessionUser);
+    const authorizedUserIds =
+      resolutionRequest.authority === "arbitrator"
+        ? getAuthorizedArbitratorUserIds()
+        : getAuthorizedModeratorUserIds();
+
+    if (
+      !assertSameUser(sessionUser, resolutionRequest.resolvedByUserId) ||
+      !authorizedUserIds.includes(sessionUserId)
+    ) {
+      return forbiddenResponse();
+    }
+  }
 
   if (resolutionRequest.buyer.userId !== order.buyerUserId) {
     return NextResponse.json(

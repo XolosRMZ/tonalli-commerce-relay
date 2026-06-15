@@ -2,6 +2,16 @@ import type { ReputationLevel, ReputationProfile } from "@xolosarmy/models";
 import { canUserAcceptOrder } from "@xolosarmy/reputation";
 import { NextResponse } from "next/server";
 
+import {
+  assertSameUser,
+  forbiddenResponse,
+  getAuthorizedArbitratorUserIds,
+  getAuthorizedModeratorUserIds,
+  getSessionUserId,
+  isProductionAuthRequired,
+  requireTonalliUser,
+  unauthorizedResponse,
+} from "@/server/auth/require-auth";
 import { getOrderStore } from "@/server/orders/get-order-store";
 import { validateOriginHeader } from "@/server/security/request-guards";
 import { getReputationStore } from "@/server/reputation/get-reputation-store";
@@ -50,6 +60,13 @@ export async function POST(request: Request, context: OrderAcceptRouteContext) {
     );
   }
 
+  const authRequired = isProductionAuthRequired();
+  const sessionUser = await requireTonalliUser(request);
+
+  if (authRequired && sessionUser === null) {
+    return unauthorizedResponse();
+  }
+
   const { id } = await context.params;
   const orderStore = await getOrderStore();
   const order = await orderStore.findById(id);
@@ -83,6 +100,12 @@ export async function POST(request: Request, context: OrderAcceptRouteContext) {
   }
 
   const acceptRequest = validation.request;
+
+  if (authRequired && sessionUser !== null) {
+    if (!assertSameUser(sessionUser, acceptRequest.intermediary.userId)) {
+      return forbiddenResponse();
+    }
+  }
 
   if (order.buyerUserId === acceptRequest.intermediary.userId) {
     return invalidAcceptOrderRequestResponse("buyerUserId must not match intermediary.userId");

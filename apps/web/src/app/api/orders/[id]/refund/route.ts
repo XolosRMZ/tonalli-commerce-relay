@@ -2,6 +2,16 @@ import { createEscrowTransactionDraft } from "@xolosarmy/escrow-core";
 import type { EscrowParticipant, EscrowParticipants } from "@xolosarmy/escrow-core";
 import { NextResponse } from "next/server";
 
+import {
+  assertSameUser,
+  forbiddenResponse,
+  getAuthorizedArbitratorUserIds,
+  getAuthorizedModeratorUserIds,
+  getSessionUserId,
+  isProductionAuthRequired,
+  requireTonalliUser,
+  unauthorizedResponse,
+} from "@/server/auth/require-auth";
 import { getOrderStore } from "@/server/orders/get-order-store";
 import { validateOriginHeader } from "@/server/security/request-guards";
 
@@ -57,6 +67,13 @@ export async function POST(request: Request, context: OrderRefundRouteContext) {
     );
   }
 
+  const authRequired = isProductionAuthRequired();
+  const sessionUser = await requireTonalliUser(request);
+
+  if (authRequired && sessionUser === null) {
+    return unauthorizedResponse();
+  }
+
   const { id } = await context.params;
   const orderStore = await getOrderStore();
   const order = await orderStore.findById(id);
@@ -92,6 +109,17 @@ export async function POST(request: Request, context: OrderRefundRouteContext) {
   }
 
   const refundRequest = validation.request;
+
+  if (authRequired && sessionUser !== null) {
+    const sessionUserId = getSessionUserId(sessionUser);
+
+    if (
+      sessionUserId !== order.buyerUserId &&
+      sessionUserId !== order.intermediaryUserId
+    ) {
+      return forbiddenResponse();
+    }
+  }
 
   if (refundRequest.buyerUserId !== order.buyerUserId) {
     return NextResponse.json(

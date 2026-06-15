@@ -2,6 +2,16 @@ import { createEscrowScriptDraft } from "@xolosarmy/escrow-core";
 import type { EscrowParticipant, EscrowParticipants } from "@xolosarmy/escrow-core";
 import { NextResponse } from "next/server";
 
+import {
+  assertSameUser,
+  forbiddenResponse,
+  getAuthorizedArbitratorUserIds,
+  getAuthorizedModeratorUserIds,
+  getSessionUserId,
+  isProductionAuthRequired,
+  requireTonalliUser,
+  unauthorizedResponse,
+} from "@/server/auth/require-auth";
 import { getOrderStore } from "@/server/orders/get-order-store";
 import { validateOriginHeader } from "@/server/security/request-guards";
 
@@ -51,6 +61,13 @@ export async function POST(request: Request, context: OrderFundRouteContext) {
     );
   }
 
+  const authRequired = isProductionAuthRequired();
+  const sessionUser = await requireTonalliUser(request);
+
+  if (authRequired && sessionUser === null) {
+    return unauthorizedResponse();
+  }
+
   const { id } = await context.params;
   const orderStore = await getOrderStore();
   const order = await orderStore.findById(id);
@@ -84,6 +101,15 @@ export async function POST(request: Request, context: OrderFundRouteContext) {
   }
 
   const fundRequest = validation.request;
+
+  if (authRequired && sessionUser !== null) {
+    if (
+      !assertSameUser(sessionUser, order.buyerUserId) ||
+      !assertSameUser(sessionUser, fundRequest.buyer.userId)
+    ) {
+      return forbiddenResponse();
+    }
+  }
 
   if (fundRequest.buyer.userId !== order.buyerUserId) {
     return invalidFundOrderRequestResponse("buyer.userId must match order.buyerUserId");

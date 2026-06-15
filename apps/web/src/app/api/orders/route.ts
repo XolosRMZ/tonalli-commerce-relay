@@ -6,6 +6,16 @@ import type {
 } from "@xolosarmy/models";
 import { NextResponse } from "next/server";
 
+import {
+  assertSameUser,
+  forbiddenResponse,
+  getAuthorizedArbitratorUserIds,
+  getAuthorizedModeratorUserIds,
+  getSessionUserId,
+  isProductionAuthRequired,
+  requireTonalliUser,
+  unauthorizedResponse,
+} from "@/server/auth/require-auth";
 import { getOrderStore } from "@/server/orders/get-order-store";
 import { validateOriginHeader } from "@/server/security/request-guards";
 
@@ -54,6 +64,13 @@ export async function POST(request: Request) {
     );
   }
 
+  const authRequired = isProductionAuthRequired();
+  const sessionUser = await requireTonalliUser(request);
+
+  if (authRequired && sessionUser === null) {
+    return unauthorizedResponse();
+  }
+
   let body: unknown;
 
   try {
@@ -68,9 +85,17 @@ export async function POST(request: Request) {
     return invalidOrderRequestResponse(validation.reason);
   }
 
-  // TODO: require TonalliAuth session.
-  const now = new Date().toISOString();
   const orderRequest = validation.request;
+
+  if (authRequired && sessionUser !== null) {
+    const sessionUserId = getSessionUserId(sessionUser);
+
+    if (orderRequest.buyerUserId !== sessionUserId) {
+      return forbiddenResponse();
+    }
+  }
+
+  const now = new Date().toISOString();
   const order: CommerceOrder = {
     id: crypto.randomUUID(),
     buyerUserId: orderRequest.buyerUserId,

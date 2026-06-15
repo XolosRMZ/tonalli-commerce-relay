@@ -2,6 +2,16 @@ import { createEscrowTransactionDraft } from "@xolosarmy/escrow-core";
 import type { EscrowParticipant, EscrowParticipants } from "@xolosarmy/escrow-core";
 import { NextResponse } from "next/server";
 
+import {
+  assertSameUser,
+  forbiddenResponse,
+  getAuthorizedArbitratorUserIds,
+  getAuthorizedModeratorUserIds,
+  getSessionUserId,
+  isProductionAuthRequired,
+  requireTonalliUser,
+  unauthorizedResponse,
+} from "@/server/auth/require-auth";
 import { getOrderStore } from "@/server/orders/get-order-store";
 import { validateOriginHeader } from "@/server/security/request-guards";
 import { getReputationStore } from "@/server/reputation/get-reputation-store";
@@ -63,6 +73,13 @@ export async function POST(request: Request, context: OrderReleaseRouteContext) 
     );
   }
 
+  const authRequired = isProductionAuthRequired();
+  const sessionUser = await requireTonalliUser(request);
+
+  if (authRequired && sessionUser === null) {
+    return unauthorizedResponse();
+  }
+
   const { id } = await context.params;
   const orderStore = await getOrderStore();
   const order = await orderStore.findById(id);
@@ -98,6 +115,16 @@ export async function POST(request: Request, context: OrderReleaseRouteContext) 
   }
 
   const releaseRequest = validation.request;
+
+  if (authRequired && sessionUser !== null) {
+    if (
+      !assertSameUser(sessionUser, order.buyerUserId) ||
+      !assertSameUser(sessionUser, releaseRequest.buyerUserId) ||
+      !assertSameUser(sessionUser, releaseRequest.buyer.userId)
+    ) {
+      return forbiddenResponse();
+    }
+  }
 
   if (releaseRequest.buyerUserId !== order.buyerUserId) {
     return NextResponse.json(
